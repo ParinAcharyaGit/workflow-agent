@@ -3,12 +3,17 @@ import pdfplumber
 import fitz  # PyMuPDF
 # from sentence_transformers import SentenceTransformer
 import requests
+import os
+from dotenv import load_dotenv
 import json
 import time
 from streamlit_flow import streamlit_flow
 from streamlit_flow.elements import StreamlitFlowNode, StreamlitFlowEdge
 from streamlit_flow.state import StreamlitFlowState
 # pip install pdfplumber sentence-transformers firebase-admin pinecone-client  requests
+
+load_dotenv()
+AUTH_TOKEN = os.getenv('AUTH_TOKEN')
 
 st.title("IBM Granite Hackathon: Workflow Agent")
 st.write("Author: Parin Acharya")
@@ -29,16 +34,17 @@ def extract_text_from_pdf(file):
     return text.strip()  # Return the extracted text without leading/trailing spaces
 
 def extract_from_granite(response_data):
+    workflow_steps = []  # Initialize workflow_steps to avoid UnboundLocalError
     try:
         # Access the results
         results = response_data['results'][0]['generated_text']
         
         # Extract the JSON output from the generated text
-        json_output_start = results.find("[JSON Output]") + len("[JSON Output]\n\n")
-        json_output = results[json_output_start:].strip().split("\n```json\n")[1].strip().split("\n```")[0]
+        json_output_start = results.find("[")  # Find the start of the JSON array
+        json_output = results[json_output_start:].strip()  # Get the JSON part
         
         # Load the JSON output
-        workflow_steps = json.loads(json_output)
+        workflow_steps = json.loads(json_output)  # Parse the JSON
         
         # Print each step's details to the terminal
         for step in workflow_steps:
@@ -52,64 +58,67 @@ def extract_from_granite(response_data):
 
     except json.JSONDecodeError as e:
         st.error(f"Failed to decode JSON: {str(e)}")
+    except IndexError as e:
+        st.error(f"Index error: {str(e)} - Check the structure of the response data.")
     except Exception as e:
         st.error(f"An error occurred: {str(e)}")
 
+    if workflow_steps:  # Only proceed if workflow_steps is not empty
+        st.write("Generating flow diagram... hang on tight...")
 
-    st.write("Generating flow diagram... hang on tight...")
-    
-    # Extract workflow steps from response_data
+        # Create nodes for each workflow step
+        nodes = []
+        for i, step in enumerate(workflow_steps):
+            step_summary = step['step_summary']
+            efficiency_score = step['efficiency_score']
+            explanation = step['explanation']
+            
+            # Determine the background color based on the efficiency score
+            if efficiency_score < 4:
+                background_color = '#ff4d4d'  # Red
+            elif efficiency_score < 7:
+                background_color = '#ffcc00'  # Orange
+            else:
+                background_color = '#00c04b'  # Green
 
-    # Create nodes for each workflow step
-    nodes = []
-    for i, step in enumerate(workflow_steps):
-        step_summary = step['step_summary']
-        efficiency_score = step['efficiency_score']
-        explanation = step['explanation']
+            content = f'Step: {step_summary}\nScore: {efficiency_score}\nExplanation: {explanation}'
+            
+            node = StreamlitFlowNode(
+                id=str(i + 1),  # Node ID starts from 1
+                pos=(100 + i * 300, 100),  # Increase spacing between nodes
+                data={'content': content},
+                node_type='default',  # Change as needed
+                source_position='right',
+                target_position='left',
+                draggable=False,
+                style={'color': 'white', 'backgroundColor': background_color, 'border': '2px solid white', 'width': '200px'}  # Set background color
+            )
+            nodes.append(node)
 
-        # colour difference 
-        if efficiency_score < 4:
-            background_color = '#ff4d4d'  # Red
-        elif efficiency_score < 7:
-            background_color = '#ffcc00'  # Orange
-        else:
-            background_color = '#00c04b' # Green
-        
-        node = StreamlitFlowNode(
-            id=str(i + 1),  # Node ID starts from 1
-            pos=(100 + i * 300, 100),  # Increase spacing between nodes
-            data={'content': f'Step: {step_summary}\nScore: {efficiency_score}\nExplanation: {explanation}'},
-            node_type='default',  # Change as needed
-            source_position='right',
-            target_position='left',
-            draggable=False,
-            style={'width': '200px', 'backgroundColor': background_color}
-        )
-        nodes.append(node)
+        # Create edges for the flow in a linear fashion
+        edges = []
+        for i in range(len(workflow_steps) - 1):
+            edges.append(StreamlitFlowEdge(
+                id=f'{i+1}-{i+2}', 
+                source=str(i + 1), 
+                target=str(i + 2), 
+                animated=True, 
+                marker_end={'type': 'arrow'}
+            ))
 
-    # Create edges for the flow in a linear fashion
-    edges = []
-    for i in range(len(workflow_steps) - 1):
-        edges.append(StreamlitFlowEdge(
-            id=f'{i+1}-{i+2}', 
-            source=str(i + 1), 
-            target=str(i + 2), 
-            animated=True, 
-            marker_end={'type': 'arrow'}
-        ))
+        # Create the flow state
+        state = StreamlitFlowState(nodes, edges)
 
-
-    # Create the flow state
-    state = StreamlitFlowState(nodes, edges)
-
-    # Render the flow visualization with adjusted size
-    streamlit_flow('static_flow',
-                   state,
-                   fit_view=False,
-                   show_minimap=False,
-                   show_controls=True,
-                   pan_on_drag=True,
-                   allow_zoom=True)  # Allow zooming for better visibility
+        # Render the flow visualization
+        streamlit_flow('static_flow',
+                       state,
+                       fit_view=True,
+                       show_minimap=False,
+                       show_controls=False,
+                       pan_on_drag=True,
+                       allow_zoom=True)  # Allow zooming for better visibility
+    else:
+        st.error("No workflow steps found. Please check the response data.")
 
 # File uploader
 uploaded_file = st.file_uploader("Choose a file", type=["pdf", "txt", "png", "jpg"])
@@ -129,9 +138,9 @@ if uploaded_file is not None:
         url = 'https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29'
 
         body = {
-            'input': """You are an expert business workflow analyzer. Your role is to analyze a business'\''s context, analyze each step in its current workflow critically and score each step. Your tasks are as follows:
+            'input': f"""You are an expert business workflow analyzer. Your role is to analyze a business'\''s context, analyze each step in its current workflow critically and score each step. Your tasks are as follows:
 
-                Use the provided is the context {text}
+                Use only the provided context: {text}
 
                 1. **Extract the Company Context:**  
                 - Retrieve key details from the company introduction (name, size, industry, location). Do not output any response yet.
@@ -142,11 +151,11 @@ if uploaded_file is not None:
 
                 3. **Score Workflow Efficiency:**  
                 - Evaluate and assign an efficiency score for each workflow step. Use scoring metrics similar to those employed in IBM business assessments (for example, consider factors like throughput, error rate, cycle time, and automation effectiveness).
-                - The score should be a numerical value from 1 (poor efficiency) to 10 (excellent efficiency). Be as critical as possible. Do not just award > 8. Do not output any response yet.
+                - The score should be a numerical value from 1 (poor efficiency) to 10 (excellent efficiency). Be as critical as possible, do not just award > 6 without justification since there is always room for improvement in the current step! Do not output any response yet.
 
                 4. **Output Format:** - Here is the output format:
-                - Only produce the final output in a JSON format. No other descriptions are required. Again, JSON format only.
-                - Each workflow step should be represented as a JSON object with the following keys:
+                - Only produce the final output in a JSON array only, not a dictionary named 'workflow_steps' or anything like 'JSON Output:' or [JSON_OUTPUT]! Verify that none of that is mentioned. No other descriptions are required. 
+                - Each JSON object should have the following keys:
                     - \"step_summary\": the 10 to 15 word summary of the step.
                     - \"efficiency_score\": the numerical score assigned.
                     - \"explanation\": a brief description of measurable, specific steps to improve workflow efficiency in this step.
@@ -171,7 +180,7 @@ if uploaded_file is not None:
         headers = {
         "Accept": "application/json",
         "Content-Type": "application/json",
-        "Authorization": "Bearer eyJraWQiOiIyMDI1MDEzMDA4NDQiLCJhbGciOiJSUzI1NiJ9.eyJpYW1faWQiOiJJQk1pZC02NjgwMDBYNjFPIiwiaWQiOiJJQk1pZC02NjgwMDBYNjFPIiwicmVhbG1pZCI6IklCTWlkIiwic2Vzc2lvbl9pZCI6IkMtOTBkMWExN2MtZDQ5OS00NDBhLThiMTUtYmIwMDFmMDMzNzVmIiwic2Vzc2lvbl9leHBfbWF4IjoxNzQwMjQ3NzMxLCJzZXNzaW9uX2V4cF9uZXh0IjoxNzQwMTc2ODE4LCJqdGkiOiIyNTE0ZmI3Mi1jNzYwLTQ2NzktYWYzMi01YmZjNDgzMDY1ZTUiLCJpZGVudGlmaWVyIjoiNjY4MDAwWDYxTyIsImdpdmVuX25hbWUiOiJQYXJpbiIsImZhbWlseV9uYW1lIjoiQWNoYXJ5YSIsIm5hbWUiOiJQYXJpbiBBY2hhcnlhIiwiZW1haWwiOiJhY2hhcnlhcGFyaW4wNUBnbWFpbC5jb20iLCJzdWIiOiJhY2hhcnlhcGFyaW4wNUBnbWFpbC5jb20iLCJhdXRobiI6eyJzdWIiOiJhY2hhcnlhcGFyaW4wNUBnbWFpbC5jb20iLCJpYW1faWQiOiJJQk1pZC02NjgwMDBYNjFPIiwibmFtZSI6IlBhcmluIEFjaGFyeWEiLCJnaXZlbl9uYW1lIjoiUGFyaW4iLCJmYW1pbHlfbmFtZSI6IkFjaGFyeWEiLCJlbWFpbCI6ImFjaGFyeWFwYXJpbjA1QGdtYWlsLmNvbSJ9LCJhY2NvdW50Ijp7InZhbGlkIjp0cnVlLCJic3MiOiI5MjI1NWJkODc1Njg0NDc5OTQ4YTM4MDRiYzM4MjgwYiIsImltc191c2VyX2lkIjoiMTMzMDU0ODYiLCJpbXMiOiIyOTcxOTkwIn0sImlhdCI6MTc0MDE2OTYxNiwiZXhwIjoxNzQwMTcwODE2LCJpc3MiOiJodHRwczovL2lhbS5jbG91ZC5pYm0uY29tL2lkZW50aXR5IiwiZ3JhbnRfdHlwZSI6InVybjppYm06cGFyYW1zOm9hdXRoOmdyYW50LXR5cGU6cGFzc2NvZGUiLCJzY29wZSI6ImlibSBvcGVuaWQiLCJjbGllbnRfaWQiOiJieCIsImFjciI6MSwiYW1yIjpbInB3ZCJdfQ.XTEEsRbTKPanjVo7YZoH7dwidm4Se-tcxP0fo-D2pDgV_5Sx09s6GhNoe2AZhuDFyy284FT5ZLfAFwCIfiAprJRSofhj4tT9E9PeSa0lD3-Jix61k1IdsXy9oWCW3SZhqK-k_fKXPBG06XvzWDNazwYk0tPiEBC6V0bFLmN06J8Mhm8YMfJDn_UnGK5h7iI-ngl-xxHYouR3aYmfSW28TE3LS66Xc0aJkLVGqGEBqs4w4rxTtr074keB7Ae-KJiG3Gu2IDNLJMLZhFo-FfKgxNtKLEvmXgNPL37C5DsrHoNSgkkTP-0BFOmeDVQmt79LM5qnIGHOrYSWisooWmqm2g"
+        "Authorization": f"Bearer {AUTH_TOKEN}"
         }
 
         st.write("Making API request...")
