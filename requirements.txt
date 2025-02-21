@@ -1,1 +1,6 @@
-streamlit
+streamlit==1.10.0
+pdfplumber==0.7.0
+requests==2.26.0
+altair==4.1.0
+# firebase-admin==5.2.0
+# pinecone-client==0.9.0
