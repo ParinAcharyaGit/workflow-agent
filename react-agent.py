@@ -126,7 +126,7 @@ def gen_ai_service(context, params=params, **custom):
     def create_chat_model(watsonx_client):
         parameters = {
             "frequency_penalty": 0,
-            "max_tokens": 1000,
+            "max_tokens": 5000,
             "presence_penalty": 0,
             "temperature": 0,
             "top_p": 1

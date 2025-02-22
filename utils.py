@@ -1,4 +1,4 @@
-# Helper functions for react-agent.py
+# utils.py
 import os
 import requests
 from dotenv import load_dotenv
@@ -19,7 +19,6 @@ data = {
 
 response = requests.post(url, headers=headers, data=data)
 watsonx_token = response.json().get("access_token")
-print("Watsonx Token:", watsonx_token)
 if watsonx_token: print("token created successfully")
 
 ###############################################################################################
@@ -28,6 +27,19 @@ if watsonx_token: print("token created successfully")
 params = {
     "space_id": "825b15ec-b09f-413c-80ed-4e7fd3fc0bb0"
 }
+
+class WorkflowAnalyzer:
+    def __init__(self):
+        self.workflow_response = None
+    
+    def set_workflow_response(self, response):
+        self.workflow_response = response
+    
+    def get_workflow_response(self):
+        return self.workflow_response
+
+# Create a global instance
+workflow_analyzer = WorkflowAnalyzer()
 
 def gen_ai_service(context, params=params, **custom):
     from langchain_ibm import ChatWatsonx
@@ -53,7 +65,7 @@ def gen_ai_service(context, params=params, **custom):
     def create_chat_model(watsonx_client):
         parameters = {
             "frequency_penalty": 0,
-            "max_tokens": 2000,
+            "max_tokens": 7500,
             "presence_penalty": 0,
             "temperature": 0,
             "top_p": 1
@@ -67,15 +79,15 @@ def gen_ai_service(context, params=params, **custom):
         )
 
     def create_tools():
+        from langchain_community.utilities import WikipediaAPIWrapper
         tools = []
         tools.append(WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper(top_k_results=2)))
-        tools.append(DuckDuckGoSearchRun())
+        tools.append(DuckDuckGoSearchRun(name='business_metrics_search'))
         return tools
 
-    def create_agent(model, tools):
+    def create_agent(model, tools, role_instructions):
         memory = MemorySaver()
-        instructions = """You are a helpful AI assistant. Answer questions clearly and concisely."""
-        return create_react_agent(model, tools=tools, checkpointer=memory, state_modifier=instructions)
+        return create_react_agent(model, tools=tools, checkpointer=memory, state_modifier=role_instructions)
 
     def convert_messages(messages):
         return [
@@ -85,29 +97,101 @@ def gen_ai_service(context, params=params, **custom):
         ]
 
     def generate(context):
+        # Get workflow response from the analyzer instance
+        response_data = workflow_analyzer.get_workflow_response()
+        if not response_data:
+            print("Warning: No workflow response data available")
+            response_data = {}
+
         payload = context.get_json()
         messages = convert_messages(payload.get("messages", []))
         
         model_instance = create_chat_model(client)
         tools = create_tools()
-        agent = create_agent(model_instance, tools)
         
-        response = agent.invoke(
-            {"messages": messages},
-            {"configurable": {"thread_id": "42"}}
-        )
+        # Initialize agent workers
+        summarizer = create_agent(model_instance, create_tools(), f"""From the context provided: {response_data}
+        - Identify, Analyze and number each business workflow step. Never combine steps.
+        - Highlight inefficiency factors.
+        - Summarize each business workflow step in 10-15 words.
+        - Output format:
+            {{
+                "steps": [
+                    {{
+                        "step_number": 1,
+                        "summary": "10-15 word description",
+                        "inefficiencies": ["list"]
+                    }}
+                ]
+            }}
+        """)
         
-        return {
-            "headers": {"Content-Type": "application/json"},
-            "body": {
-                "choices": [{
-                    "message": {
-                        "role": "assistant",
-                        "content": response["messages"][-1].content
-                    }
-                }]
+        scorer = create_agent(model_instance, [DuckDuckGoSearchRun()], 'Score EACH business workflow step separately from 1 to 10, where 10 indicates highest efficiency, using named industry metrics. Be as critical as possible, do not just score highly without justification. Mention the metric used.')
+
+        suggester = create_agent(model_instance, tools, """ Your role is to suggest improvements for each step. Do not use any tools in this step, your output should be JSON only.
+            - The JSON object output should have the following keys:
+                    - \"step_summary\": the brief 10 to 15 word summary of each business workflow step with the step number in chronological order.
+                    - \"efficiency_score\": the numerical score assigned out of 10 for each business workflow step.
+                    - \"explanation\": a description of specific steps to improve workflow efficiency and an estimated improvement in affected metrics for each business workflow step.        
+        """)
+
+        # Chaining the agents together through carried context
+        try:
+            summary_result = summarizer.invoke(
+                {'messages': messages},
+                {'configurable':{'thread_id': 42 }, 'recursion_limit': 300 }
+            )
+
+            scored_result = scorer.invoke(
+                {'messages': summary_result['messages']},
+                {'configurable':{'thread_id': 42 }, 'recursion_limit': 300 }
+            )
+
+            suggestions = suggester.invoke(
+                {
+                    'messages': [
+                        *summary_result['messages'],
+                        *scored_result['messages'],
+                        {
+                            "role": "user",
+                            "content": "REMINDER: Final output must be JSON array with: step_summary, efficiency_score, improvements and expected_impact for EACH business workflow step."
+                        }
+                    ]
+                }, 
+                {'configurable':{'thread_id': 42 }, 'recursion_limit': 300, 'timeout': 1200 }
+            )
+
+            try:
+                output_data = json.loads(suggestions["messages"][-1].content)
+                if not isinstance(output_data, list):
+                    output_data = [output_data]
+            except:
+                output_data = []
+
+            return {
+                "headers": {"Content-Type": "application/json"},
+                "body": {
+                    "choices": [{
+                        "message": {
+                            "role": "assistant",
+                            "content": json.dumps(output_data)
+                        }
+                    }]
+                }
             }
-        }
+        except Exception as e:
+            print(f"Error in generate function: {str(e)}")
+            return {
+                "headers": {"Content-Type": "application/json"},
+                "body": {
+                    "choices": [{
+                        "message": {
+                            "role": "assistant",
+                            "content": json.dumps([{"error": str(e)}])
+                        }
+                    }]
+                }
+            }
 
     return generate, None
 
@@ -129,8 +213,8 @@ class RealContext:
 
 if __name__ == "__main__":
     messages = [
-        {"role": "user", "content": "provide 2 real world metrics of analyzing business workflow inefficiencies at fast growing startups."}
-        # sample query: provide 2 real world metrics of analyzing business workflow inefficiencies at fast growing startups.
+        {"role": "system", "content": "You are an expert multi-agent framework that analyzes of a business workflow. Maintain JSON format throughout the output of the analysis chain and present in a clean, parsable format."},
+        {"role": "user", "content": "Begin the business workflow analysis chain."}
     ]
     context = RealContext(messages)
     generate, _ = gen_ai_service(context)

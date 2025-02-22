@@ -8,6 +8,10 @@ __pycache__/
 # Secrets
 .env
 
+# Test files
+react-agent.py
+test.py
+
 # C extensions
 *.so
 
