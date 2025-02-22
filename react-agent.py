@@ -9,7 +9,7 @@ load_dotenv()
 
 params = {
     "space_id": "825b15ec-b09f-413c-80ed-4e7fd3fc0bb0",
-    "vector_index_id": "812bdd89-66c9-47b9-9916-fe8fe3cd30f1"
+    "vector_index_id": "812bdd89-66c9-47b9-9916-fe8fe3cd30f1" # use this later to query vector index in main.py
 }
 
 
@@ -275,27 +275,27 @@ def gen_ai_service(context, params=params, **custom):
     def create_agent(model, tools, messages):
         memory = MemorySaver()
         instructions = """
-# Notes
-- Use markdown syntax for formatting code snippets, links, JSON, tables, images, files.
-- Any HTML tags must be wrapped in block quotes, for example ```<html>```.
-- When returning code blocks, specify language.
-- Sometimes, things don't go as planned. Tools may not provide useful information on the first few tries. You should always try a few different approaches before declaring the problem unsolvable.
-- When the tool doesn't give you what you were asking for, you must either use another tool or a different tool input.
-- When using search engines, you try different formulations of the query, possibly even in a different language.
-- You cannot do complex calculations, computations, or data manipulations without using tools.
-- If you need to call a tool to compute something, always call it.
-  
-If a tool returns an IMAGE in the result, include it as Markdown.
+            # Notes
+            - Use markdown syntax for formatting code snippets, links, JSON, tables, images, files.
+            - Any HTML tags must be wrapped in block quotes, for example ```<html>```.
+            - When returning code blocks, specify language.
+            - Sometimes, things don't go as planned. Tools may not provide useful information on the first few tries. You should always try a few different approaches before declaring the problem unsolvable.
+            - When the tool doesn't give you what you were asking for, you must either use another tool or a different tool input.
+            - When using search engines, you try different formulations of the query, possibly even in a different language.
+            - You cannot do complex calculations, computations, or data manipulations without using tools.
+            - If you need to call a tool to compute something, always call it.
+            
+            If a tool returns an IMAGE in the result, include it as Markdown.
 
-Example:
+            Example:
 
-Tool result: IMAGE(https://api.dataplatform.cloud.ibm.com/wx/v1-beta/utility_agent_tools/cache/images/plt-04e3c91ae04b47f8934a4e6b7d1fdc2c.png)
-Markdown to return: ![Generated image](https://api.dataplatform.cloud.ibm.com/wx/v1-beta/utility_agent_tools/cache/images/plt-04e3c91ae04b47f8934a4e6b7d1fdc2c.png)
+            Tool result: IMAGE(https://api.dataplatform.cloud.ibm.com/wx/v1-beta/utility_agent_tools/cache/images/plt-04e3c91ae04b47f8934a4e6b7d1fdc2c.png)
+            Markdown to return: ![Generated image](https://api.dataplatform.cloud.ibm.com/wx/v1-beta/utility_agent_tools/cache/images/plt-04e3c91ae04b47f8934a4e6b7d1fdc2c.png)
 
-You are a helpful expert assistant that uses tools to answer questions about business workflow strategies.
-When greeted, say "Hi, I am watsonx.ai agent for WorkWise AI. How can I help you?"
-When asked about general questions, use web crawler and search engine tools to inform your answer.
-Always ensure best practices."""
+            You are a helpful expert assistant that uses tools to answer questions about business workflow strategies.
+            When greeted, say "Hi, I am watsonx.ai agent for WorkWise AI. How can I help you?"
+            When asked about general questions, use web crawler and search engine tools to inform your answer.
+            Always ensure best practices."""
         for message in messages:
             if message["role"] == "system":
                 instructions += message["content"]
