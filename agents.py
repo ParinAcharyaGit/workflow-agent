@@ -1,79 +1,20 @@
-import asyncio
-import os
-from dotenv import load_dotenv
-from pydantic import BaseModel, Field
-from beeai_framework.adapters.watsonx.backend.chat import WatsonxChatModel
-from beeai_framework.backend.message import UserMessage
-from beeai_framework.cancellation import AbortSignal
-from azureml.core import ScriptRunContext  
+import requests
 
-# Load environment variables from .env file
-load_dotenv()
+# you must manually set API_KEY below using information retrieved from your IBM Cloud account (https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/ml-authentication.html?context=wx)
+API_KEY = "vHKuy3n_Vbw8QctQOt5h4KZzheSWUqO10F1DV1zD9WH0"
+token_response = requests.post('https://iam.cloud.ibm.com/identity/token', data={"apikey":
+ API_KEY, "grant_type": 'urn:ibm:params:oauth:grant-type:apikey'})
+mltoken = token_response.json()["access_token"]
+print(mltoken)
 
-# Retrieve the values from environment variables
-project_id = os.getenv("WATSONX_PROJECT_ID")
-api_key = os.getenv("WATSONX_API_KEY")
-api_base = os.getenv("WATSONX_API_URL")
+headers = {
+    'Authorization': f'Bearer + {mltoken}',
+    'Content-Type': 'application/json',
+}
 
-context = ScriptRunContext()  # Adjust this line based on your actual context initialization
+payload_scoring = {"messages":[{"content":"Hi, help me understand step 1 in the business workflow provided. Use RAGQuery only.","role":"user"}]}
 
-# Initialize the WatsonxChatModel with IBM Granite
-llm = WatsonxChatModel(
-    "ibm/granite-3-8b-instruct",
-    project_id=project_id,
-    api_key=api_key,
-    api_base=api_base,
-)
-
-async def watsonx_sync() -> None:
-    user_message = UserMessage("What is the capital of Massachusetts?")
-    try:
-        response = await llm.create({"messages": [user_message]})
-        print(response.get_text_content())
-    except Exception as ex:
-        await context.emitter.emit("error", {"input": [user_message], "exception": str(ex)})
-
-async def watsonx_stream() -> None:
-    user_message = UserMessage("How many islands make up the country of Cape Verde?")
-    try:
-        response = await llm.create({"messages": [user_message], "stream": True})
-        print(response.get_text_content())
-    except Exception as ex:
-        await context.emitter.emit("error", {"input": [user_message], "exception": str(ex)})
-
-async def watsonx_stream_abort() -> None:
-    user_message = UserMessage("What is the smallest of the Cape Verde islands?")
-    try:
-        response = await llm.create({"messages": [user_message], "stream": True, "abort_signal": AbortSignal.timeout(0.5)})
-        if response is not None:
-            print(response.get_text_content())
-        else:
-            print("No response returned.")
-    except Exception as ex:
-        await context.emitter.emit("error", {"input": [user_message], "exception": str(ex)})
-
-async def watson_structure() -> None:
-    class TestSchema(BaseModel):
-        answer: str = Field(description="your final answer")
-
-    user_message = UserMessage("How many islands make up the country of Cape Verde?")
-    response = await llm.create_structure(
-        {
-            "schema": TestSchema,
-            "messages": [user_message],
-        }
-    )
-    print(response.object)
-
-async def main() -> None:
-    print("*" * 10, "watsonx_sync")
-    await watsonx_sync()
-    print("*" * 10, "watsonx_stream")
-    await watsonx_stream()
-    print("*" * 10, "watsonx_stream_abort")
-    await watsonx_stream_abort()
-    print("*" * 10, "watson_structure")
-    await watson_structure()
-
-if __name__ == "__main__":
-    asyncio.run(main())
+response_scoring = requests.post('https://us-south.ml.cloud.ibm.com/ml/v4/deployments/528030d4-dac7-48b5-b39f-3776f6bb4ecc/ai_service?version=2021-05-01', json=payload_scoring,
+ headers={'Authorization': 'Bearer ' + mltoken})
+print("Scoring response")
+print(response_scoring.json())
