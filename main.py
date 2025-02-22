@@ -13,12 +13,34 @@ from streamlit_flow.state import StreamlitFlowState
 # pip install pdfplumber sentence-transformers firebase-admin pinecone-client  requests
 
 load_dotenv()
-AUTH_TOKEN = os.getenv('AUTH_TOKEN')
 
 st.title("IBM Granite Hackathon: Workflow Agent")
 st.write("Author: Parin Acharya")
 
 # embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+
+    # Authentication token for IBM Watson
+API_KEY = os.environ['IBM_API_KEY']
+NEW_API_KEY = os.environ['NEW_API_KEY']
+token_response = requests.post('https://iam.cloud.ibm.com/identity/token', data={"apikey":
+API_KEY, "grant_type": 'urn:ibm:params:oauth:grant-type:apikey'})
+mltoken = token_response.json()["access_token"]
+
+def generate_iam_token(NEW_API_KEY):
+    url = 'https://iam.cloud.ibm.com/identity/token'
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded"
+    }
+    data = {
+        "grant_type": "urn:ibm:params:oauth:grant-type:apikey",
+        "apikey": NEW_API_KEY
+    }
+
+    response = requests.post(url, headers=headers, data=data)
+    if response.status_code == 200:
+        return response.json().get("access_token")
+    
+access_token = generate_iam_token(NEW_API_KEY)
 
 def extract_text_from_pdf(file):
     start_time = time.time()  # Start timing
@@ -120,6 +142,7 @@ def extract_from_granite(response_data):
     else:
         st.error("No workflow steps found. Please check the response data.")
 
+# Starting point
 # File uploader
 uploaded_file = st.file_uploader("Choose a file", type=["pdf", "txt", "png", "jpg"])
 
@@ -176,11 +199,11 @@ if uploaded_file is not None:
             "project_id": "f284f75e-ea6b-4395-a973-1b7b02b2c176"
         }
         
-        # move the bearer token to .env or add an input feature
+        # move the bearer token to .env or add mltoken from above: Check access rights
         headers = {
         "Accept": "application/json",
         "Content-Type": "application/json",
-        "Authorization": f"Bearer {AUTH_TOKEN}"
+        "Authorization": f"Bearer {access_token}"
         }
 
         st.write("Making API request...")
@@ -194,7 +217,79 @@ if uploaded_file is not None:
             extract_from_granite(response_data)  # Parse JSON to create flowchart
             # generate_vizualizations(response_data)  # Generate flow diagram
 
+            # Make sidepanel available?
+            st.title("WorkWise AI chat interface")
+            st.session_state.clear()
+
+            # Clear session state on initial load
+            if 'page_refreshed' not in st.session_state:
+                st.session_state.clear()  # Clears session on initial load
+                st.session_state.page_refreshed = True
+
+            if "messages" not in st.session_state:
+                st.session_state.messages = []  # Initialize chat history
+
+            # Turn-taking logic
+            if 'waiting_for_user' not in st.session_state:
+                st.session_state.waiting_for_user = False
+
+            # Ensure we have a session key for user_input?
+
+            # Display all messages in the history
+            for message in st.session_state.messages:
+                with st.chat_message(message["role"]):
+                    st.markdown(message['content'])
+
+            API_KEY = os.getenv('IBM_API_KEY')
+            headers = {
+                'Authorization': f'Bearer + {mltoken}',
+                'Content-Type': 'application/json',
+            }
+
+            input = st.text_input("Ask WorkWiseAI ...")
+            # Add button to control the chat flow
+            send_button = st.button('send')
+
+            # input = st.text_input("Ask WorkWiseAI ...", key="user_input")
+
+            if send_button:
+                print('user message received')
+                st.chat_message("user").markdown(input)
+                st.session_state.messages.append({"role": "user", "content": f'{input}'})
+                st.session_state.user_input = "" # Clear input after sending, preparing for follow-up
+
+                if not st.session_state.waiting_for_user:
+                    st.session_state.waiting_for_user = True
+
+                    with st.spinner("Thinking..."):
+                        payload_scoring = {
+                            "messages": st.session_state.messages
+                        }
+
+                        response_scoring = requests.post(
+                            'https://us-south.ml.cloud.ibm.com/ml/v4/deployments/528030d4-dac7-48b5-b39f-3776f6bb4ecc/ai_service?version=2021-05-01',
+                            json=payload_scoring,
+                            headers={'Authorization': 'Bearer ' + mltoken}
+                        )
+
+                        try:
+                            response_data = response_scoring.json()
+                            assistant_reply = response_data['choices'][0]['message']['content']
+                        except Exception as e:
+                            assistant_reply = f"Error: {str(e)}"
+                        finally:
+                            st.chat_message("assistant").markdown(assistant_reply)
+                            st.session_state.messages.append({"role": "assistant", "content": assistant_reply})
+
+                    # Unlock for next message and clear input so it won't resend
+                    st.session_state.waiting_for_user = False
+                    # st.session_state["user_input"] = ""  # Clear input to prevent duplication on rerun
+                follow_up = st.button('follow-up')
+                if follow_up:
+                    st.rerun()
+            
         else:
             st.error(f'Error: {response.status_code} - {response.text}')  # Display error message if response is not 200
 
         
+

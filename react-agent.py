@@ -1,3 +1,6 @@
+# this was the code reference provided with the agent that uses tools.
+# https://dataplatform.cloud.ibm.com/ml-runtime/ai-services/1951bc85-98ae-4652-aff2-a7f22df5a103/code?space_id=825b15ec-b09f-413c-80ed-4e7fd3fc0bb0&context=wx
+
 import os
 import json
 from dotenv import load_dotenv
