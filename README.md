@@ -81,7 +81,7 @@ This enables powerful support for 3 worker agents:
     ├── main.py
     ├── react-agent.py
     ├── requirements.txt
-    ├── shared_state.py
+    ├── state.py
     ├── test.py
     └── utils.py
 ```
