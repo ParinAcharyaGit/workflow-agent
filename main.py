@@ -7,6 +7,7 @@ import os
 from dotenv import load_dotenv
 import json
 import time
+from streamlit_flow import streamlit_flow
 from streamlit_flow.elements import StreamlitFlowNode, StreamlitFlowEdge
 from streamlit_flow.state import StreamlitFlowState
 import pandas as pd
@@ -160,6 +161,9 @@ def extract_from_granite(response_data):
 # Starting point
 tab1, tab2 = st.tabs(['Home', 'Agent'])
 
+if 'tab1_completed' not in st.session_state:
+    st.session_state.tab1_completed = False
+
 with tab1:
     st.image("workwiseai_cover_image.jpg")
         # Display a welcome message and guide
@@ -169,7 +173,7 @@ with tab1:
     st.markdown("""
     To explore the features of WorkWiseAI, follow these steps:
 
-    1. **Upload Your Document**: Start by uploading a PDF or text document in the **Home** tab.
+    1. **Upload Your Business Process Document (BPD)**: Start by uploading a PDF or text document in the **Home** tab.
 
     2. **Visualizations**: View workflow visualizations generated from your document.
 
@@ -177,7 +181,7 @@ with tab1:
 
     4. **S3 Agent Tab**: Explore advanced analysis features powered by the WorkWise S3 Agent.
 
-    5. **Review Past Analyses**: Compare efficiency scores from past analyses, if available.
+    5. **Review Past Analyses**: Compare efficiency scores from past analyses, if available, in the agent tab.
 
     Feel free to explore each tab and make the most of the tools provided!
     """)
@@ -187,7 +191,7 @@ with tab1:
 
 
 # File uploader
-    uploaded_file = st.file_uploader("Choose a file", type=["pdf", "txt", "png", "jpg"])
+    uploaded_file = st.file_uploader("Upload Business Process Document (BPD)", type=["pdf", "txt", "png", "jpg"])
 
     if uploaded_file is not None:
         # Display the file based on its type
@@ -255,6 +259,7 @@ with tab1:
             if response.status_code == 200:
                 st.success('Response received successfully!')  # Display success message for response
                 response_data = response.json()  # Get the JSON data from the response
+                
                                 
                 # set_response(response_data) # for use in utils.py
 
@@ -334,347 +339,360 @@ with tab1:
                     if follow_up:
                         st.rerun()
             else:
-                st.error(f'Error: {response.status_code} - {response.text}')  # Display error message if response is not 200
+                st.error(f'Error: {response.status_code} - {response.text}') 
+            
+     # Display error message if response is not 200
+    st.session_state.tab1_completed = True
+    st.session_state.required_response = response_data
+    # load context for tab 2
+    # parsed_context = response_data
 
 with tab2:
-    st.image("workflow.png", caption='Architecture Overview')
-    if response_data: parsed_context = response_data
-    with st.spinner('Hang on tight for a response from the WorkWise S3 Agent.'):
-        IBM_API_KEY = os.getenv('IBM_API_KEY')
-        url = "https://iam.cloud.ibm.com/identity/token"
+    if st.session_state.tab1_completed:
+        # Waits for tab 1 session to complete before accessing global variables.
+        # prevents on_load errors
 
-        headers = {
-            "Content-Type": "application/x-www-form-urlencoded"
-        }
+        required_data = st.session_state.required_response
+        print(required_data) # for debugging
 
-        data = {
-            "grant_type": "urn:ibm:params:oauth:grant-type:apikey",
-            "apikey": IBM_API_KEY
-        }
+        st.image("workflow.png", caption='Architecture Overview')
+        
+        with st.spinner('Hang on tight for a response from the WorkWise S3 Agent.'):
+            IBM_API_KEY = os.getenv('IBM_API_KEY')
+            url = "https://iam.cloud.ibm.com/identity/token"
 
-        response = requests.post(url, headers=headers, data=data)
-        watsonx_token = response.json().get("access_token")
-        if watsonx_token: print("token created successfully")
-
-        params = {
-        "space_id": "825b15ec-b09f-413c-80ed-4e7fd3fc0bb0"
-        }
-
-        def gen_ai_service(context, params=params, **custom):
-            from langchain_ibm import ChatWatsonx
-            from ibm_watsonx_ai import APIClient
-            from langchain_core.messages import AIMessage, HumanMessage
-            from langchain_community.tools import WikipediaQueryRun, DuckDuckGoSearchRun
-            from langchain_community.utilities import WikipediaAPIWrapper
-            from langgraph.checkpoint.memory import MemorySaver
-            from langgraph.prebuilt import create_react_agent
-
-            model = "meta-llama/llama-3-3-70b-instruct"
-            service_url = "https://us-south.ml.cloud.ibm.com"
-
-            credentials = {
-                "url": service_url,
-                "token": context.generate_token()
+            headers = {
+                "Content-Type": "application/x-www-form-urlencoded"
             }
 
-            client = APIClient(credentials)
-            space_id = params.get("space_id")
-            client.set.default_space(space_id)
+            data = {
+                "grant_type": "urn:ibm:params:oauth:grant-type:apikey",
+                "apikey": IBM_API_KEY
+            }
 
-            def create_chat_model(watsonx_client):
-                parameters = {
-                    "frequency_penalty": 0,
-                    "max_tokens": 7500,
-                    "presence_penalty": 0,
-                    "temperature": 0,
-                    "top_p": 1
-                }
-                return ChatWatsonx(
-                    model_id=model,
-                    url=service_url,
-                    space_id=space_id,
-                    params=parameters,
-                    watsonx_client=watsonx_client,
-                )
+            response = requests.post(url, headers=headers, data=data)
+            watsonx_token = response.json().get("access_token")
+            if watsonx_token: print("token created successfully")
 
-            def create_tools():
+            params = {
+            "space_id": "825b15ec-b09f-413c-80ed-4e7fd3fc0bb0"
+            }
+
+            def gen_ai_service(context, params=params, **custom):
+                from langchain_ibm import ChatWatsonx
+                from ibm_watsonx_ai import APIClient
+                from langchain_core.messages import AIMessage, HumanMessage
+                from langchain_community.tools import WikipediaQueryRun, DuckDuckGoSearchRun
                 from langchain_community.utilities import WikipediaAPIWrapper
-                tools = []
-                tools.append(WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper(top_k_results=2)))
-                tools.append(DuckDuckGoSearchRun(name='business_metrics_search'))
-                return tools
+                from langgraph.checkpoint.memory import MemorySaver
+                from langgraph.prebuilt import create_react_agent
 
-            def create_agent(model, tools, role_instructions):
-                memory = MemorySaver()
-                return create_react_agent(model, tools=tools, checkpointer=memory, state_modifier=role_instructions)
+                model = "meta-llama/llama-3-3-70b-instruct"
+                service_url = "https://us-south.ml.cloud.ibm.com"
 
-            def convert_messages(messages):
-                return [
-                    HumanMessage(content=msg["content"]) if msg["role"] == "user" 
-                    else AIMessage(content=msg["content"])
-                    for msg in messages
-                ]
+                credentials = {
+                    "url": service_url,
+                    "token": context.generate_token()
+                }
 
-            def generate(context):
-                # Get workflow response from the analyzer instance
+                client = APIClient(credentials)
+                space_id = params.get("space_id")
+                client.set.default_space(space_id)
 
-                payload = context.get_json()
-                messages = convert_messages(payload.get("messages", []))
-                
-                model_instance = create_chat_model(client)
-                tools = create_tools()
-                
-                # Initialize agent workers
-                summarizer = create_agent(model_instance, create_tools(), f"""From the context provided: {parsed_context}
-                - Identify, Analyze and number each business workflow step. Never combine steps.
-                - Highlight inefficiency factors.
-                - Summarize each business workflow step in 10-15 words.
-                - Output format:
-                    {{
-                        "steps": [
-                            {{
-                                "step_number": 1,
-                                "summary": "10-15 word description",
-                                "inefficiencies": ["list"]
-                            }}
-                        ]
-                    }}
-                """)
-                
-                scorer = create_agent(model_instance, [DuckDuckGoSearchRun()], 'Score EACH business workflow step separately from 1 to 10, where 10 indicates highest efficiency, using named industry metrics. Be as critical as possible, do not just score highly without justification. Mention the metric used.')
-
-                suggester = create_agent(model_instance, tools, """ Your role is to suggest improvements for each step. Do not use any tools in this step, your output should be JSON only.
-                        
-                """)
-
-                # Chaining the agents together through carried context
-                try:
-                    summary_result = summarizer.invoke(
-                        {'messages': messages},
-                        {'configurable':{'thread_id': 42 }, 'recursion_limit': 300 }
+                def create_chat_model(watsonx_client):
+                    parameters = {
+                        "frequency_penalty": 0,
+                        "max_tokens": 7500,
+                        "presence_penalty": 0,
+                        "temperature": 0,
+                        "top_p": 1
+                    }
+                    return ChatWatsonx(
+                        model_id=model,
+                        url=service_url,
+                        space_id=space_id,
+                        params=parameters,
+                        watsonx_client=watsonx_client,
                     )
 
-                    scored_result = scorer.invoke(
-                        {'messages': summary_result['messages']},
-                        {'configurable':{'thread_id': 42 }, 'recursion_limit': 300 }
-                    )
+                def create_tools():
+                    from langchain_community.utilities import WikipediaAPIWrapper
+                    tools = []
+                    tools.append(WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper(top_k_results=2)))
+                    tools.append(DuckDuckGoSearchRun(name='business_metrics_search'))
+                    return tools
 
-                    suggestions = suggester.invoke(
-                        {
-                            'messages': [
-                                *summary_result['messages'],
-                                *scored_result['messages'],
-                                {
-                                    "role": "user",
-                                    "content": """REMINDER: Final output must be JSON array with: step_summary, efficiency_score, improvements and expected_impact for EACH business workflow step.
-                                        - The JSON object output must have the following keys. DO THIS FOR EACH OF THE BUSINESS WORKFLOW STEPS, YOU MUST INCLUDE ALL STEPS AND THEIR KEYS IN THE OUTPUT!!!:
-                                            - "step_summary": the brief 10 to 15 word summary of each business workflow step with the step number in chronological order.
-                                            - "explanation": an insightful 30 word description of specific steps to improve workflow efficiency. Include specific tools/methodologies that could be used for instance. Include which affected metrics would improve, and by what extent for each business workflow step.  
-                                            - "efficiency_score": an updated numerical score as an estimate out of 10 that estimates the workflow efficiency after possible implementation of specific steps/tools/methodologies to improve workflow efficiency in this step. 
-                                    """
-                                }
+                def create_agent(model, tools, role_instructions):
+                    memory = MemorySaver()
+                    return create_react_agent(model, tools=tools, checkpointer=memory, state_modifier=role_instructions)
+
+                def convert_messages(messages):
+                    return [
+                        HumanMessage(content=msg["content"]) if msg["role"] == "user" 
+                        else AIMessage(content=msg["content"])
+                        for msg in messages
+                    ]
+
+                def generate(context):
+                    # Get workflow response from the analyzer instance
+
+                    payload = context.get_json()
+                    messages = convert_messages(payload.get("messages", []))
+                    
+                    model_instance = create_chat_model(client)
+                    tools = create_tools()
+                    
+                    # Initialize agent workers
+                    summarizer = create_agent(model_instance, create_tools(), f"""From the context provided: {required_data}
+                    - Identify, Analyze and number each business workflow step. Never combine steps.
+                    - Highlight inefficiency factors.
+                    - Summarize each business workflow step in 10-15 words.
+                    - Output format:
+                        {{
+                            "steps": [
+                                {{
+                                    "step_number": 1,
+                                    "summary": "10-15 word description",
+                                    "inefficiencies": ["list"]
+                                }}
                             ]
-                        }, 
-                        {'configurable':{'thread_id': 42 }, 'recursion_limit': 300, 'timeout': 1200 }
-                    )
+                        }}
+                    """)
+                    
+                    scorer = create_agent(model_instance, [DuckDuckGoSearchRun()], 'Score EACH business workflow step separately from 1 to 10, where 10 indicates highest efficiency, using named industry metrics. Be as critical as possible, do not just score highly without justification. Mention the metric used.')
 
+                    suggester = create_agent(model_instance, tools, """ Your role is to suggest improvements for each step. Do not use any tools in this step, your output should be JSON only.
+                            
+                    """)
+
+                    # Chaining the agents together through carried context
                     try:
-                        output_data = json.loads(suggestions["messages"][-1].content)
-                        if not isinstance(output_data, list):
-                            output_data = [output_data]
-                    except:
-                        output_data = []
+                        summary_result = summarizer.invoke(
+                            {'messages': messages},
+                            {'configurable':{'thread_id': 42 }, 'recursion_limit': 300 }
+                        )
 
-                    return {
-                        "headers": {"Content-Type": "application/json"},
-                        "body": {
-                            "choices": [{
-                                "message": {
-                                    "role": "assistant",
-                                    "content": json.dumps(output_data)
-                                }
-                            }]
+                        scored_result = scorer.invoke(
+                            {'messages': summary_result['messages']},
+                            {'configurable':{'thread_id': 42 }, 'recursion_limit': 300 }
+                        )
+
+                        suggestions = suggester.invoke(
+                            {
+                                'messages': [
+                                    *summary_result['messages'],
+                                    *scored_result['messages'],
+                                    {
+                                        "role": "user",
+                                        "content": """REMINDER: Final output must be JSON array with: step_summary, efficiency_score, improvements and expected_impact for EACH business workflow step.
+                                            - The JSON object output must have the following keys. DO THIS FOR EACH OF THE BUSINESS WORKFLOW STEPS, YOU MUST INCLUDE ALL STEPS AND THEIR KEYS IN THE OUTPUT!!!:
+                                                - "step_summary": the brief 10 to 15 word summary of each business workflow step with the step number in chronological order.
+                                                - "explanation": an insightful 30 word description of specific steps to improve workflow efficiency. Include specific tools/methodologies that could be used for instance. Include which affected metrics would improve, and by what extent for each business workflow step.  
+                                                - "efficiency_score": an updated numerical score as an estimate out of 10 that estimates the workflow efficiency after possible implementation of specific steps/tools/methodologies to improve workflow efficiency in this step. 
+                                        """
+                                    }
+                                ]
+                            }, 
+                            {'configurable':{'thread_id': 42 }, 'recursion_limit': 300, 'timeout': 1200 }
+                        )
+
+                        try:
+                            output_data = json.loads(suggestions["messages"][-1].content)
+                            if not isinstance(output_data, list):
+                                output_data = [output_data]
+                        except:
+                            output_data = []
+
+                        return {
+                            "headers": {"Content-Type": "application/json"},
+                            "body": {
+                                "choices": [{
+                                    "message": {
+                                        "role": "assistant",
+                                        "content": json.dumps(output_data)
+                                    }
+                                }]
+                            }
                         }
-                    }
-                except Exception as e:
-                    print(f"Error in generate function: {str(e)}")
-                    return {
-                        "headers": {"Content-Type": "application/json"},
-                        "body": {
-                            "choices": [{
-                                "message": {
-                                    "role": "assistant",
-                                    "content": json.dumps([{"error": str(e)}])
-                                }
-                            }]
+                    except Exception as e:
+                        print(f"Error in generate function: {str(e)}")
+                        return {
+                            "headers": {"Content-Type": "application/json"},
+                            "body": {
+                                "choices": [{
+                                    "message": {
+                                        "role": "assistant",
+                                        "content": json.dumps([{"error": str(e)}])
+                                    }
+                                }]
+                            }
                         }
-                    }
 
-            return generate, None
+                return generate, None
 
-        class RealContext:
-            def __init__(self, messages):
-                self._messages = messages
-                self._token = watsonx_token
-                if not self._token:
-                    raise Exception("WATSONX_TOKEN environment variable not set.")
+            class RealContext:
+                def __init__(self, messages):
+                    self._messages = messages
+                    self._token = watsonx_token
+                    if not self._token:
+                        raise Exception("WATSONX_TOKEN environment variable not set.")
 
-            def generate_token(self):
-                return self._token
+                def generate_token(self):
+                    return self._token
 
-            def get_token(self):
-                return self.generate_token()
+                def get_token(self):
+                    return self.generate_token()
 
-            def get_json(self):
-                return {"messages": self._messages}
+                def get_json(self):
+                    return {"messages": self._messages}
 
 
-        messages = [
-            {"role": "system", "content": "You are an expert multi-agent framework that analyzes of a business workflow. Maintain JSON format throughout the output of the analysis chain and present in a clean, parsable format."},
-            {"role": "user", "content": "Begin the business workflow analysis chain."}
-        ]
+            messages = [
+                {"role": "system", "content": "You are an expert multi-agent framework that analyzes of a business workflow. Maintain JSON format throughout the output of the analysis chain and present in a clean, parsable format."},
+                {"role": "user", "content": "Begin the business workflow analysis chain."}
+            ]
 
-        context = RealContext(messages)
-        generate, _ = gen_ai_service(context)
-        agent_response = generate(context)             # this will be used to populate the AI
-        print(json.dumps(agent_response, indent=2))
+            context = RealContext(messages)
+            generate, _ = gen_ai_service(context)
+            agent_response = generate(context)             # this will be used to populate the AI
+            print(json.dumps(agent_response, indent=2))
 
-    # Function to parse JSON response
-        def parse_responses(raw_response):
+        # Function to parse JSON response
+            def parse_responses(raw_response):
+                try:
+                    # Ensure response is a dictionary
+                    if not isinstance(raw_response, dict):
+                        raw_response = json.loads(raw_response)  # Convert string to dictionary if needed
+
+                    # Extract message content (which is a JSON string)
+                    content_str = raw_response.get('body', {}).get('choices', [{}])[0].get('message', {}).get('content', '[]')
+
+                    # Convert content string into a Python object (a list)
+                    parsed_data = json.loads(content_str)
+
+                    return parsed_data  # This is now a properly structured list of steps
+
+                except json.JSONDecodeError as e:
+                    st.error(f"Failed to parse JSON response: {str(e)}")
+                    return []
+            # Display the parsed data on Streamlit UI
+            # print(response_data)
+            st.header('Comparison against legacy workflow') # Add thinking animation?    
+            # THIS IS FOR THE LEGACY WORKFLOW
+            analyzed_steps = []  # Initialize workflow_steps to avoid UnboundLocalError
             try:
-                # Ensure response is a dictionary
-                if not isinstance(raw_response, dict):
-                    raw_response = json.loads(raw_response)  # Convert string to dictionary if needed
-
-                # Extract message content (which is a JSON string)
-                content_str = raw_response.get('body', {}).get('choices', [{}])[0].get('message', {}).get('content', '[]')
-
-                # Convert content string into a Python object (a list)
-                parsed_data = json.loads(content_str)
-
-                return parsed_data  # This is now a properly structured list of steps
+                # Access the results
+                analyzed_results = response_data['results'][0]['generated_text']
+                
+                # Extract the JSON output from the generated text
+                json_output = analyzed_results.replace("[JSON Output]", "").strip()  # Remove the [JSON Output] marker
+                json_output = json_output[json_output.find("["):].strip()  # Find the actual array start
+                
+                # Load the JSON output
+                analyzed_steps = json.loads(json_output)  # Parse the JSON
+                
+                # Print each step's details to the terminal
+                for step in analyzed_steps:
+                    step_summary = step['step_summary']
+                    efficiency_score = step['efficiency_score']
+                    explanation = step['explanation']
+                    # with st.expander(f"{step['step_summary']} (Score: {step['efficiency_score']})"):
+                    #     st.markdown(f"**Explanation:** {step['explanation']}")
 
             except json.JSONDecodeError as e:
-                st.error(f"Failed to parse JSON response: {str(e)}")
-                return []
-        # Display the parsed data on Streamlit UI
-        # print(response_data)
-        st.header('Comparison against legacy workflow') # Add thinking animation?    
-        # THIS IS FOR THE LEGACY WORKFLOW
-        analyzed_steps = []  # Initialize workflow_steps to avoid UnboundLocalError
-        try:
-            # Access the results
-            analyzed_results = response_data['results'][0]['generated_text']
-            
-            # Extract the JSON output from the generated text
-            json_output = analyzed_results.replace("[JSON Output]", "").strip()  # Remove the [JSON Output] marker
-            json_output = json_output[json_output.find("["):].strip()  # Find the actual array start
-            
-            # Load the JSON output
-            analyzed_steps = json.loads(json_output)  # Parse the JSON
-            
-            # Print each step's details to the terminal
-            for step in analyzed_steps:
-                step_summary = step['step_summary']
-                efficiency_score = step['efficiency_score']
-                explanation = step['explanation']
-                # with st.expander(f"{step['step_summary']} (Score: {step['efficiency_score']})"):
-                #     st.markdown(f"**Explanation:** {step['explanation']}")
+                st.error(f"Failed to decode JSON: {str(e)}")
+            except IndexError as e:
+                st.error(f"Index error: {str(e)} - Check the structure of the response data.")
+            except Exception as e:
+                st.error(f"An error occurred: {str(e)}")
 
-        except json.JSONDecodeError as e:
-            st.error(f"Failed to decode JSON: {str(e)}")
-        except IndexError as e:
-            st.error(f"Index error: {str(e)} - Check the structure of the response data.")
-        except Exception as e:
-            st.error(f"An error occurred: {str(e)}")
-
-            # Function to display steps in Streamlit
-        def display_steps(parsed_responses):
-            for item in parsed_responses:
-                if 'steps' in item:
-                    for idx, step in enumerate(item['steps']):
-                        # Get corresponding legacy step if exists
-                        legacy_step = analyzed_steps[idx] if idx < len(analyzed_steps) else None
-                        
-                        # Create comparison title
-                        title = f"{step.get('step_summary', 'Step')} "
-                        title += f"(New Score: {step.get('efficiency_score', 'N/A')}"
-                        if legacy_step:
-                            title += f" vs Legacy: {legacy_step.get('efficiency_score', 'N/A')})"
-                        else:
-                            title += ")"
-                        
-                        # Create expander with comparison
-                        with st.expander(f"Step {idx+1}: {step.get('step_summary', 'Step')}"):
-                            # Create two columns for layout
-                            col1, col2 = st.columns(2)
+                # Function to display steps in Streamlit
+            def display_steps(parsed_responses):
+                for item in parsed_responses:
+                    if 'steps' in item:
+                        for idx, step in enumerate(item['steps']):
+                            # Get corresponding legacy step if exists
+                            legacy_step = analyzed_steps[idx] if idx < len(analyzed_steps) else None
                             
-                            # Legacy Analysis (Left-aligned)
-                            with col1:
-                                if legacy_step:
+                            # Create comparison title
+                            title = f"{step.get('step_summary', 'Step')} "
+                            title += f"(New Score: {step.get('efficiency_score', 'N/A')}"
+                            if legacy_step:
+                                title += f" vs Legacy: {legacy_step.get('efficiency_score', 'N/A')})"
+                            else:
+                                title += ")"
+                            
+                            # Create expander with comparison
+                            with st.expander(f"Step {idx+1}: {step.get('step_summary', 'Step')}"):
+                                # Create two columns for layout
+                                col1, col2 = st.columns(2)
+                                
+                                # Legacy Analysis (Left-aligned)
+                                with col1:
+                                    if legacy_step:
+                                        st.markdown(
+                                            f"<div style='text-align: left; color: #ffd700;'>"
+                                            f"<strong>🡐 Previous Score: {legacy_step.get('efficiency_score', 'N/A')}</strong><br>"
+                                            f"{legacy_step.get('explanation', 'No legacy explanation available')}"
+                                            f"</div>", 
+                                            unsafe_allow_html=True
+                                        )
+                                
+                                # New Analysis (Right-aligned)
+                                with col2:
                                     st.markdown(
-                                        f"<div style='text-align: left; color: #ffd700;'>"
-                                        f"<strong>🡐 Previous Score: {legacy_step.get('efficiency_score', 'N/A')}</strong><br>"
-                                        f"{legacy_step.get('explanation', 'No legacy explanation available')}"
+                                        f"<div style='text-align: right; color: #00ff00;'>"
+                                        f"<strong>New Score: {step.get('efficiency_score', 'N/A')} 🡒</strong><br>"
+                                        f"{step.get('explanation', 'No explanation available')}"
                                         f"</div>", 
                                         unsafe_allow_html=True
                                     )
-                            
-                            # New Analysis (Right-aligned)
-                            with col2:
-                                st.markdown(
-                                    f"<div style='text-align: right; color: #00ff00;'>"
-                                    f"<strong>New Score: {step.get('efficiency_score', 'N/A')} 🡒</strong><br>"
-                                    f"{step.get('explanation', 'No explanation available')}"
-                                    f"</div>", 
-                                    unsafe_allow_html=True
-                                )
-                            
-                            
-                            
-                            # Add improvement recommendations if available
-                            # if 'improvements' in step:
-                            #     st.markdown("**Recommendations:**")
-                            #     for improvement in step['improvements']:
-                            #         st.markdown(f"- {improvement}")
-                else:
-                    st.warning("No steps found in response.")
+                                
+                                
+                                
+                                # Add improvement recommendations if available
+                                # if 'improvements' in step:
+                                #     st.markdown("**Recommendations:**")
+                                #     for improvement in step['improvements']:
+                                #         st.markdown(f"- {improvement}")
+                    else:
+                        st.warning("No steps found in response.")
 
-        # Parse the responses
-    parsed_responses = parse_responses(agent_response)
+            # Parse the responses
+        parsed_responses = parse_responses(agent_response)
 
-    display_steps(parsed_responses)
+        display_steps(parsed_responses)
 
-        
-    if parsed_responses and 'steps' in parsed_responses[0]:
-    # Extract step numbers and efficiency scores
-        steps = [f"Step {i+1}" for i in range(len(parsed_responses[0]['steps']))]
-        agent_scores = [step['efficiency_score'] for step in parsed_responses[0]['steps']]
-        legacy_scores = [step['efficiency_score'] for step in analyzed_steps] if analyzed_steps else [0] * len(agent_scores)
+            
+        if parsed_responses and 'steps' in parsed_responses[0]:
+        # Extract step numbers and efficiency scores
+            steps = [f"Step {i+1}" for i in range(len(parsed_responses[0]['steps']))]
+            agent_scores = [step['efficiency_score'] for step in parsed_responses[0]['steps']]
+            legacy_scores = [step['efficiency_score'] for step in analyzed_steps] if analyzed_steps else [0] * len(agent_scores)
 
-        # Create a DataFrame for the chart
-        data = pd.DataFrame({
-            'Step': steps,
-            'Legacy Workflow': legacy_scores,
-            'Agent Workflow': agent_scores
-        })
+            # Create a DataFrame for the chart
+            data = pd.DataFrame({
+                'Step': steps,
+                'Legacy Workflow': legacy_scores,
+                'Agent Workflow': agent_scores
+            })
 
-        # Melt the DataFrame to have a long-form format suitable for Altair
-        data_melted = data.melt('Step', var_name='Workflow', value_name='Efficiency Score')
+            # Melt the DataFrame to have a long-form format suitable for Altair
+            data_melted = data.melt('Step', var_name='Workflow', value_name='Efficiency Score')
 
-        # Create the Altair chart
-        chart = alt.Chart(data_melted).mark_bar().encode(
-            x=alt.X('Step:N', title='Workflow Step'),
-            y=alt.Y('Efficiency Score:Q', title='Efficiency Score'),
-            color=alt.Color('Workflow:N', scale=alt.Scale(range=['#00ff00','#ffd700'])),
-            tooltip=['Step', 'Workflow', 'Efficiency Score']
-        ).properties(
-            title='Comparison of Efficiency Scores',
-            width=600,
-            height=400
-        )
+            # Create the Altair chart
+            chart = alt.Chart(data_melted).mark_bar().encode(
+                x=alt.X('Step:N', title='Workflow Step'),
+                y=alt.Y('Efficiency Score:Q', title='Efficiency Score'),
+                color=alt.Color('Workflow:N', scale=alt.Scale(range=['#00ff00','#ffd700'])),
+                tooltip=['Step', 'Workflow', 'Efficiency Score']
+            ).properties(
+                title='Comparison of Efficiency Scores',
+                width=600,
+                height=400
+            )
 
-        # Display the chart in Streamlit
-        st.altair_chart(chart, use_container_width=True)
-    else:
-        st.error("No data available to display the chart.")
+            # Display the chart in Streamlit
+            st.altair_chart(chart, use_container_width=True)
+        else:
+            st.error("No data available to display the chart.")
