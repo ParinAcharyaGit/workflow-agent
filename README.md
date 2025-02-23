@@ -19,6 +19,8 @@
 </div>
 <br clear="right">
 
+![Cover Image](workwiseai_cover_image.jpg)
+
 ##  Quick Links
 
 - [ Overview](#-overview)
