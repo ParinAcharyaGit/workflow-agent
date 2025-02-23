@@ -221,7 +221,7 @@ with tab1:
             headers = {
             "Accept": "application/json",
             "Content-Type": "application/json",
-            "Authorization": f"Bearer  eyJraWQiOiIyMDI1MDEzMDA4NDQiLCJhbGciOiJSUzI1NiJ9.eyJpYW1faWQiOiJJQk1pZC02NjgwMDBYNjFPIiwiaWQiOiJJQk1pZC02NjgwMDBYNjFPIiwicmVhbG1pZCI6IklCTWlkIiwic2Vzc2lvbl9pZCI6IkMtOGFlMTBkYmItYjhmZS00ZmE0LThlZWMtMThiYWZmNmQwOWJhIiwic2Vzc2lvbl9leHBfbWF4IjoxNzQwMzQ3MzM5LCJzZXNzaW9uX2V4cF9uZXh0IjoxNzQwMjcxNTcwLCJqdGkiOiIxMWUyOGEwZS01NmZjLTQzZTctOTNiOS0zMjZjMDVlOThmYTEiLCJpZGVudGlmaWVyIjoiNjY4MDAwWDYxTyIsImdpdmVuX25hbWUiOiJQYXJpbiIsImZhbWlseV9uYW1lIjoiQWNoYXJ5YSIsIm5hbWUiOiJQYXJpbiBBY2hhcnlhIiwiZW1haWwiOiJhY2hhcnlhcGFyaW4wNUBnbWFpbC5jb20iLCJzdWIiOiJhY2hhcnlhcGFyaW4wNUBnbWFpbC5jb20iLCJhdXRobiI6eyJzdWIiOiJhY2hhcnlhcGFyaW4wNUBnbWFpbC5jb20iLCJpYW1faWQiOiJJQk1pZC02NjgwMDBYNjFPIiwibmFtZSI6IlBhcmluIEFjaGFyeWEiLCJnaXZlbl9uYW1lIjoiUGFyaW4iLCJmYW1pbHlfbmFtZSI6IkFjaGFyeWEiLCJlbWFpbCI6ImFjaGFyeWFwYXJpbjA1QGdtYWlsLmNvbSJ9LCJhY2NvdW50Ijp7InZhbGlkIjp0cnVlLCJic3MiOiI5MjI1NWJkODc1Njg0NDc5OTQ4YTM4MDRiYzM4MjgwYiIsImltc191c2VyX2lkIjoiMTMzMDU0ODYiLCJpbXMiOiIyOTcxOTkwIn0sImlhdCI6MTc0MDI2NDM2NywiZXhwIjoxNzQwMjY1NTY3LCJpc3MiOiJodHRwczovL2lhbS5jbG91ZC5pYm0uY29tL2lkZW50aXR5IiwiZ3JhbnRfdHlwZSI6InVybjppYm06cGFyYW1zOm9hdXRoOmdyYW50LXR5cGU6cGFzc2NvZGUiLCJzY29wZSI6ImlibSBvcGVuaWQiLCJjbGllbnRfaWQiOiJieCIsImFjciI6MSwiYW1yIjpbInB3ZCJdfQ.W7Mcs7JYIECMSarwOJJuZj-31YZethGzct2OvUa1m3CV00wOBAVyVeVtXAf0X1V0UCHpr_ttmMjzMQ0mkFKB5k9ctkpl9eJ4yDIyxAjeCAo_CayMrRFkwx1EapeZaQ0bT-x69iM39xNGuQpbE7puL6eqUYjtMGSLP8I8O70y9HuN9GDlkfQVIALuCgVTia_bsO8Ud0gm4fIbqXa6WBx9g4MjFn-L3OhhV2pphzLI0KuD5B2Hr07-K6bYIwL9uSbWoPSVKUJLbmUWl-AgOH1vZ4dxw4-i3MMMizPfxDq5N1aUUfSqbpCNIhCaNDckoKdBa0uwniX40Ppn7GPythgjLg"
+            "Authorization": f"Bearer  eyJraWQiOiIyMDI1MDEzMDA4NDQiLCJhbGciOiJSUzI1NiJ9.eyJpYW1faWQiOiJJQk1pZC02NjgwMDBYNjFPIiwiaWQiOiJJQk1pZC02NjgwMDBYNjFPIiwicmVhbG1pZCI6IklCTWlkIiwic2Vzc2lvbl9pZCI6IkMtOGFlMTBkYmItYjhmZS00ZmE0LThlZWMtMThiYWZmNmQwOWJhIiwic2Vzc2lvbl9leHBfbWF4IjoxNzQwMzQ3MzM5LCJzZXNzaW9uX2V4cF9uZXh0IjoxNzQwMjc1Njg0LCJqdGkiOiIyMWM0NGVmNC1hZWUzLTQ1ZjItOGE2OS0yZGRjZmNkYWU4ODgiLCJpZGVudGlmaWVyIjoiNjY4MDAwWDYxTyIsImdpdmVuX25hbWUiOiJQYXJpbiIsImZhbWlseV9uYW1lIjoiQWNoYXJ5YSIsIm5hbWUiOiJQYXJpbiBBY2hhcnlhIiwiZW1haWwiOiJhY2hhcnlhcGFyaW4wNUBnbWFpbC5jb20iLCJzdWIiOiJhY2hhcnlhcGFyaW4wNUBnbWFpbC5jb20iLCJhdXRobiI6eyJzdWIiOiJhY2hhcnlhcGFyaW4wNUBnbWFpbC5jb20iLCJpYW1faWQiOiJJQk1pZC02NjgwMDBYNjFPIiwibmFtZSI6IlBhcmluIEFjaGFyeWEiLCJnaXZlbl9uYW1lIjoiUGFyaW4iLCJmYW1pbHlfbmFtZSI6IkFjaGFyeWEiLCJlbWFpbCI6ImFjaGFyeWFwYXJpbjA1QGdtYWlsLmNvbSJ9LCJhY2NvdW50Ijp7InZhbGlkIjp0cnVlLCJic3MiOiI5MjI1NWJkODc1Njg0NDc5OTQ4YTM4MDRiYzM4MjgwYiIsImltc191c2VyX2lkIjoiMTMzMDU0ODYiLCJpbXMiOiIyOTcxOTkwIn0sImlhdCI6MTc0MDI2ODQ4MSwiZXhwIjoxNzQwMjY5NjgxLCJpc3MiOiJodHRwczovL2lhbS5jbG91ZC5pYm0uY29tL2lkZW50aXR5IiwiZ3JhbnRfdHlwZSI6InVybjppYm06cGFyYW1zOm9hdXRoOmdyYW50LXR5cGU6cGFzc2NvZGUiLCJzY29wZSI6ImlibSBvcGVuaWQiLCJjbGllbnRfaWQiOiJieCIsImFjciI6MSwiYW1yIjpbInB3ZCJdfQ.hQ_erFb6SKId7Rr3pADtHkUy_MzfwAW3r5QbtBPW5QbA-cu6Ha7KjPXKPtkcsN26FocC5hO7N89iSErHcK4xzHMAEeNiajTNChMWzrKCxSzj7Ff5osn7dX6b5SWZwi7H2W5dTFXlcjXN32W6bxl5ECDG_ZcX_yY2JmEItVkgEro5OO85oHfVVe_iZXQ5yjc6QoSiDA9xguilLIDBGcLhtxNfV0G-tUl6LjrhwwsC6bPRiAG9Ij7LOtvX4pQXLDz46GFB7AJ3Jif4jg84MAOuY_Kme1Pgw0mnjcvP5B7MUTO1CVRYuIMi9NUbLsayigomhTcXREUnO7YW_Qm6BiqLog"
             }
 
             st.write("Making API request...")
@@ -515,11 +515,45 @@ with tab2:
 
     context = RealContext(messages)
     generate, _ = gen_ai_service(context)
-    response = generate(context)             # this will be used to populate the AI
-    print(json.dumps(response, indent=2))
-    st.write(json.dumps(response, indent=2))
+    agent_response = generate(context)             # this will be used to populate the AI
+    print(json.dumps(agent_response, indent=2))
+    st.write(json.dumps(agent_response, indent=2))
 
-    
+    # Function to properly extract and parse JSON objects from concatenated responses
+    st.json(agent_response)  # Displays response in Streamlit UI for debugging
 
+    # Function to parse JSON response
+    def parse_responses(raw_response):
+        try:
+            # Ensure response is a dictionary
+            if not isinstance(raw_response, dict):
+                raw_response = json.loads(raw_response)  # Convert string to dictionary if needed
 
+            # Extract message content (which is a JSON string)
+            content_str = raw_response.get('body', {}).get('choices', [{}])[0].get('message', {}).get('content', '[]')
 
+            # Convert content string into a Python object (a list)
+            parsed_data = json.loads(content_str)
+
+            return parsed_data  # This is now a properly structured list of steps
+
+        except json.JSONDecodeError as e:
+            st.error(f"Failed to parse JSON response: {str(e)}")
+            return []
+
+    # Function to display steps in Streamlit
+    def display_steps(parsed_responses):
+        for item in parsed_responses:
+            if 'steps' in item:  # Ensure steps exist
+                for step in item['steps']:
+                    # Create an expander for each step
+                    with st.expander(f"{step.get('step_summary', 'Step')} (Score: {step.get('efficiency_score', 'N/A')})"):
+                        st.markdown(f"**Explanation:** {step.get('explanation', 'No explanation available')}")
+            else:
+                st.warning("No steps found in response.")
+
+    # Parse the responses
+    parsed_responses = parse_responses(agent_response)
+
+    # Display the parsed data on Streamlit UI
+    display_steps(parsed_responses)
