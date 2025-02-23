@@ -7,10 +7,9 @@ import os
 from dotenv import load_dotenv
 import json
 import time
-# from streamlit_flow import streamlit_flow
+from streamlit_flow import streamlit_flow
 from streamlit_flow.elements import StreamlitFlowNode, StreamlitFlowEdge
 from streamlit_flow.state import StreamlitFlowState
-from streamlit_flow.elements import streamlit_flow
 import pandas as pd
 import altair as alt
 
@@ -165,8 +164,12 @@ tab1, tab2 = st.tabs(['Home', 'Agent'])
 if 'tab1_completed' not in st.session_state:
     st.session_state.tab1_completed = False
 
+# fix on-load error
+if 'required_response' not in st.session_state:
+    st.session_state.required_response = None
+
 with tab1:
-    st.image("workwiseai_cover_image.jpg")
+    st.image("./images/workwiseai_cover_image.jpg")
         # Display a welcome message and guide
     # Provide a brief overview of the features
     st.write("## Getting Started")
@@ -297,7 +300,7 @@ with tab1:
                     'Content-Type': 'application/json',
                 }
 
-                input = st.text_input("Ask WorkWiseAI ...")
+                input = st.text_input("Ask WorkWiseAI ...", height = 150)
                 # Add button to control the chat flow
                 send_button = st.button('send')
 
@@ -343,8 +346,8 @@ with tab1:
                 st.error(f'Error: {response.status_code} - {response.text}') 
             
      # Display error message if response is not 200
-    st.session_state.tab1_completed = True
-    st.session_state.required_response = response_data
+            st.session_state.tab1_completed = True
+            st.session_state.required_response = response_data
     # load context for tab 2
     # parsed_context = response_data
 
@@ -356,7 +359,7 @@ with tab2:
         required_data = st.session_state.required_response
         print(required_data) # for debugging
 
-        st.image("workflow.png", caption='Architecture Overview')
+        st.image("./images/workflow.png", caption='Architecture Overview')
         
         with st.spinner('Hang on tight for a response from the WorkWise S3 Agent.'):
             IBM_API_KEY = os.getenv('IBM_API_KEY')

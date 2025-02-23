@@ -1,5 +1,4 @@
 <div align="left" style="position: relative;">
-<img src="https://raw.githubusercontent.com/PKief/vscode-material-icon-theme/ec559a9f6bfd399b82bb44393651661b08aaf7ba/icons/folder-markdown-open.svg" align="right" width="30%" style="margin: -20px 0 0 20px;">
 <h1>WorkwiseAI</h1>
 <p align="left">
 	<em><code>PARIN ACHARYA</code></em>
@@ -19,24 +18,26 @@
 </div>
 <br clear="right">
 
-![Cover Image](workwiseai_cover_image.jpg)
+![Cover Image](/images/workwiseai_cover_image.jpg)
 
 ##  Quick Links
 
-- [ Overview](#-overview)
-- [ Features](#-features)
-- [ Technology Used](#-technology-used)
-- [ Project Structure](#-project-structure)
+- [ Overview](#overview)
+- [ Features](#features)
+- [ Technology Used](#technology-used)
+- [ Project Structure](#project-structure)
   - [ Project Index](#-project-index)
-- [ Getting Started](#-getting-started)
-  - [ Prerequisites](#-prerequisites)
-  - [ Installation](#-installation)
-  - [ Usage](#-usage)
-  - [ Testing](#-testing)
-- [ Roadmap of Project Tasks](#-project-roadmap)
-- [ Contributing](#-contributing)
-- [ License](#-license)
-- [ Acknowledgments](#-acknowledgments)
+- [ Getting Started](#getting-started)
+  - [ Prerequisites](#prerequisites)
+  - [ Installation](#installation)
+  - [ Usage](#usage)
+  - [ Testing](#testing)
+- [ Roadmap of Project Tasks](#roadmap-of-project-tasks)
+- [ Contributing](#contributing)
+- [ License](#license)
+- [ Acknowledgments](#acknowledgments)
+
+[Hackathon page](https://https://lablab.ai/event/generative-ai-hackathon-with-ibm-granite/workwiseai/workwiseai)
 
 ---
 
@@ -59,6 +60,8 @@
 - *Business workflow context grounding* using a knowledge base of company documents, in <code>IBM Vector Indexes</code>.
 - *Cutting-edge AI Insights* in generative tasks through the state-of-the-art <code>granite-3-8b-instruct</code> foundation model. [see Model card](https://huggingface.co/ibm-granite/granite-3.1-8b-instruct)
 - *Workflow vizualization dashboard* in Streamlit with clear, interactive widgets to represent large data.
+   ![Flow diagram](/images/flow_diagram.jpg)
+
 - *WorkwiseAI 'S3' Agent* - a ground-up agent pipeline built on top of the LangChain Framework in IBM AgentLab to analyze business workflow inefficiencies. 
 This enables powerful support for 3 worker agents:
     * **Summarizer agent**
@@ -66,25 +69,28 @@ This enables powerful support for 3 worker agents:
     * **Scorer agent**
         *Evaluates each step in the current workflow using a custom scoring model alongside industry-relevant metrics.
     * **Suggester agent**: Access to tools like WikipediaQuery, GoDuckGoSearch and RAGQuery to suggest actionable improvements to each step in the workflow.
+    ![S3 Agent Output](/images/comparison_1.jpg)
+    ![S3 Agent Output](/imagescomparison_2.jpg)
+
 - *Chatbot User Interface* grounded in business context documents with multi-language support.
+   ![Chatbot](/images/chatbot.jpg)
 
 
-## Workflow Diagram
+## S3 Agent Workflow Diagram
+![S3 Agent Workflow diagram](/images/workflow.png)
 
 ##  Project Structure
 
 ```sh
 └── workflow-agent/
-    ├── .github
-    │   └── CODEOWNERS
+    ├── .images
     ├── LICENSE
     ├── README.md
-    ├── agents.py
     ├── main.py
     ├── react-agent.py
-    ├── requirements.txt
-    ├── state.py
-    ├── test.py
+    ├── requirements.txt   
+    ├── test_data.pdf
+    ├── utils.py
     └── utils.py
 ```
 
@@ -210,7 +216,7 @@ Run the test suite using the following command:
 
 ##  License
 
-This project is protected under the [SELECT-A-LICENSE](https://choosealicense.com/licenses) License. For more details, refer to the [LICENSE](https://choosealicense.com/licenses/) file.
+For more details, refer to the [LICENSE](https://choosealicense.com/licenses/) file.
 
 ---
 
