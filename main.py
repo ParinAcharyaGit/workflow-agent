@@ -155,9 +155,9 @@ def extract_from_granite(response_data):
                        allow_zoom=True)  # Allow zooming for better visibility
     else:
         st.error("No workflow steps found. Please check the response data.")
+# function ends here
 
 # Starting point
-
 tab1, tab2 = st.tabs(['Home', 'Agent'])
 
 with tab1:
@@ -199,7 +199,7 @@ with tab1:
                     - Each JSON object should have the following keys:
                         - \"step_summary\": the 10 to 15 word summary of the step.
                         - \"efficiency_score\": the numerical score assigned.
-                        - \"explanation\": a brief description of measurable, specific steps to improve workflow efficiency in this step.
+                        - \"explanation\": a description of the main factor(s) leading to workflow inefficiency, with associated metrics, in this step.
                     - Ensure the JSON is clean and fully parsable.
 
                     Please process the test_data accordingly and output the results in the required JSON format.
@@ -221,7 +221,7 @@ with tab1:
             headers = {
             "Accept": "application/json",
             "Content-Type": "application/json",
-            "Authorization": f"Bearer  eyJraWQiOiIyMDI1MDEzMDA4NDQiLCJhbGciOiJSUzI1NiJ9.eyJpYW1faWQiOiJJQk1pZC02NjgwMDBYNjFPIiwiaWQiOiJJQk1pZC02NjgwMDBYNjFPIiwicmVhbG1pZCI6IklCTWlkIiwic2Vzc2lvbl9pZCI6IkMtOGFlMTBkYmItYjhmZS00ZmE0LThlZWMtMThiYWZmNmQwOWJhIiwic2Vzc2lvbl9leHBfbWF4IjoxNzQwMzQ3MzM5LCJzZXNzaW9uX2V4cF9uZXh0IjoxNzQwMjc1Njg0LCJqdGkiOiIyMWM0NGVmNC1hZWUzLTQ1ZjItOGE2OS0yZGRjZmNkYWU4ODgiLCJpZGVudGlmaWVyIjoiNjY4MDAwWDYxTyIsImdpdmVuX25hbWUiOiJQYXJpbiIsImZhbWlseV9uYW1lIjoiQWNoYXJ5YSIsIm5hbWUiOiJQYXJpbiBBY2hhcnlhIiwiZW1haWwiOiJhY2hhcnlhcGFyaW4wNUBnbWFpbC5jb20iLCJzdWIiOiJhY2hhcnlhcGFyaW4wNUBnbWFpbC5jb20iLCJhdXRobiI6eyJzdWIiOiJhY2hhcnlhcGFyaW4wNUBnbWFpbC5jb20iLCJpYW1faWQiOiJJQk1pZC02NjgwMDBYNjFPIiwibmFtZSI6IlBhcmluIEFjaGFyeWEiLCJnaXZlbl9uYW1lIjoiUGFyaW4iLCJmYW1pbHlfbmFtZSI6IkFjaGFyeWEiLCJlbWFpbCI6ImFjaGFyeWFwYXJpbjA1QGdtYWlsLmNvbSJ9LCJhY2NvdW50Ijp7InZhbGlkIjp0cnVlLCJic3MiOiI5MjI1NWJkODc1Njg0NDc5OTQ4YTM4MDRiYzM4MjgwYiIsImltc191c2VyX2lkIjoiMTMzMDU0ODYiLCJpbXMiOiIyOTcxOTkwIn0sImlhdCI6MTc0MDI2ODQ4MSwiZXhwIjoxNzQwMjY5NjgxLCJpc3MiOiJodHRwczovL2lhbS5jbG91ZC5pYm0uY29tL2lkZW50aXR5IiwiZ3JhbnRfdHlwZSI6InVybjppYm06cGFyYW1zOm9hdXRoOmdyYW50LXR5cGU6cGFzc2NvZGUiLCJzY29wZSI6ImlibSBvcGVuaWQiLCJjbGllbnRfaWQiOiJieCIsImFjciI6MSwiYW1yIjpbInB3ZCJdfQ.hQ_erFb6SKId7Rr3pADtHkUy_MzfwAW3r5QbtBPW5QbA-cu6Ha7KjPXKPtkcsN26FocC5hO7N89iSErHcK4xzHMAEeNiajTNChMWzrKCxSzj7Ff5osn7dX6b5SWZwi7H2W5dTFXlcjXN32W6bxl5ECDG_ZcX_yY2JmEItVkgEro5OO85oHfVVe_iZXQ5yjc6QoSiDA9xguilLIDBGcLhtxNfV0G-tUl6LjrhwwsC6bPRiAG9Ij7LOtvX4pQXLDz46GFB7AJ3Jif4jg84MAOuY_Kme1Pgw0mnjcvP5B7MUTO1CVRYuIMi9NUbLsayigomhTcXREUnO7YW_Qm6BiqLog"
+            "Authorization": f"Bearer eyJraWQiOiIyMDI1MDEzMDA4NDQiLCJhbGciOiJSUzI1NiJ9.eyJpYW1faWQiOiJJQk1pZC02NjgwMDBYNjFPIiwiaWQiOiJJQk1pZC02NjgwMDBYNjFPIiwicmVhbG1pZCI6IklCTWlkIiwic2Vzc2lvbl9pZCI6IkMtOGFlMTBkYmItYjhmZS00ZmE0LThlZWMtMThiYWZmNmQwOWJhIiwic2Vzc2lvbl9leHBfbWF4IjoxNzQwMzQ3MzM5LCJzZXNzaW9uX2V4cF9uZXh0IjoxNzQwMjc5MjYyLCJqdGkiOiI1MTE0Y2JiMC1iNzc5LTQyN2QtODFkMS02ZWRiYjY4ZWE2MmMiLCJpZGVudGlmaWVyIjoiNjY4MDAwWDYxTyIsImdpdmVuX25hbWUiOiJQYXJpbiIsImZhbWlseV9uYW1lIjoiQWNoYXJ5YSIsIm5hbWUiOiJQYXJpbiBBY2hhcnlhIiwiZW1haWwiOiJhY2hhcnlhcGFyaW4wNUBnbWFpbC5jb20iLCJzdWIiOiJhY2hhcnlhcGFyaW4wNUBnbWFpbC5jb20iLCJhdXRobiI6eyJzdWIiOiJhY2hhcnlhcGFyaW4wNUBnbWFpbC5jb20iLCJpYW1faWQiOiJJQk1pZC02NjgwMDBYNjFPIiwibmFtZSI6IlBhcmluIEFjaGFyeWEiLCJnaXZlbl9uYW1lIjoiUGFyaW4iLCJmYW1pbHlfbmFtZSI6IkFjaGFyeWEiLCJlbWFpbCI6ImFjaGFyeWFwYXJpbjA1QGdtYWlsLmNvbSJ9LCJhY2NvdW50Ijp7InZhbGlkIjp0cnVlLCJic3MiOiI5MjI1NWJkODc1Njg0NDc5OTQ4YTM4MDRiYzM4MjgwYiIsImltc191c2VyX2lkIjoiMTMzMDU0ODYiLCJpbXMiOiIyOTcxOTkwIn0sImlhdCI6MTc0MDI3MjA1OSwiZXhwIjoxNzQwMjczMjU5LCJpc3MiOiJodHRwczovL2lhbS5jbG91ZC5pYm0uY29tL2lkZW50aXR5IiwiZ3JhbnRfdHlwZSI6InVybjppYm06cGFyYW1zOm9hdXRoOmdyYW50LXR5cGU6cGFzc2NvZGUiLCJzY29wZSI6ImlibSBvcGVuaWQiLCJjbGllbnRfaWQiOiJieCIsImFjciI6MSwiYW1yIjpbInB3ZCJdfQ.EyrdIfNuPhzM-2SPAwWCv34cKvAWa3g3XJRyUB14BfhuhbqnXIzKqKI4kNiAPc3rr8Yrr2Qr1e9rLX0LbjExx0_QeuvPPH2UAKNt0BU0d2kIJsS3EXP70b3bt8UHa2_0lukLUzsDS0RlLnOfYjwhZXCrTSY0C2hR9VxQUfq5VtHf3nRSUgNQPqqRc0LJ2csNLxRau3g636TlWNkmG4Ywg20oq7aSXLrexjMSyewnuUcyVh0558d_qKkuxUTHvFCHuF0IghSUAsKg54mfJIe_fwIUpCG_lU3dHUN3PiKOTdoWSdVydyKkxflSJbIOqgYzojGImRcEdZ3vcOddZLFE2g"
             }
 
             st.write("Making API request...")
@@ -233,7 +233,7 @@ with tab1:
                 st.write(response_data) # for debugging
 
                 
-                set_response(response_data) # for use in utils.py
+                # set_response(response_data) # for use in utils.py
 
                 st.write("generating visualizations...hang on tight...")
                 extract_from_granite(response_data)  # Parse JSON to create flowchart
@@ -310,9 +310,6 @@ with tab1:
                     follow_up = st.button('follow-up')
                     if follow_up:
                         st.rerun()
-
-                        
-                
             else:
                 st.error(f'Error: {response.status_code} - {response.text}')  # Display error message if response is not 200
 
@@ -448,8 +445,8 @@ with tab2:
                                 "content": """REMINDER: Final output must be JSON array with: step_summary, efficiency_score, improvements and expected_impact for EACH business workflow step.
                                     - The JSON object output must have the following keys. DO THIS FOR EACH OF THE BUSINESS WORKFLOW STEPS, YOU MUST INCLUDE ALL STEPS AND THEIR KEYS IN THE OUTPUT!!!:
                                         - "step_summary": the brief 10 to 15 word summary of each business workflow step with the step number in chronological order.
-                                        - "efficiency_score": the numerical score assigned out of 10 for each business workflow step.
-                                        - "explanation": an insightful 30 word description of specific steps to improve workflow efficiency. Include specific tools/methodologies that could be used for instance. Include which affected metrics would improve, and by what extent for each business workflow step.   
+                                        - "explanation": an insightful 30 word description of specific steps to improve workflow efficiency. Include specific tools/methodologies that could be used for instance. Include which affected metrics would improve, and by what extent for each business workflow step.  
+                                        - "efficiency_score": an updated numerical score as an estimate out of 10 that estimates the workflow efficiency after possible implementation of specific steps/tools/methodologies to improve workflow efficiency in this step. 
                                 """
                             }
                         ]
@@ -557,3 +554,34 @@ with tab2:
 
     # Display the parsed data on Streamlit UI
     display_steps(parsed_responses)
+
+    # print(response_data)
+    st.header('Comparison against legacy workflow') # Add thinking animation?    
+    # THIS IS FOR THE LEGACY WORKFLOW
+    analyzed_steps = []  # Initialize workflow_steps to avoid UnboundLocalError
+    try:
+        # Access the results
+        analyzed_results = response_data['results'][0]['generated_text']
+        
+        # Extract the JSON output from the generated text
+        json_output = analyzed_results.replace("[JSON Output]", "").strip()  # Remove the [JSON Output] marker
+        json_output = json_output[json_output.find("["):].strip()  # Find the actual array start
+        
+        # Load the JSON output
+        analyzed_steps = json.loads(json_output)  # Parse the JSON
+        
+        # Print each step's details to the terminal
+        for step in analyzed_steps:
+            step_summary = step['step_summary']
+            efficiency_score = step['efficiency_score']
+            explanation = step['explanation']
+            with st.expander(f"{step['step_summary']} (Score: {step['efficiency_score']})"):
+                st.markdown(f"**Explanation:** {step['explanation']}")
+
+    except json.JSONDecodeError as e:
+        st.error(f"Failed to decode JSON: {str(e)}")
+    except IndexError as e:
+        st.error(f"Index error: {str(e)} - Check the structure of the response data.")
+    except Exception as e:
+        st.error(f"An error occurred: {str(e)}")
+
