@@ -19,7 +19,8 @@ load_dotenv()
 
 st.title("IBM Granite Hackathon: WorkWiseAI")
 st.write('Built on IBM’s open source granite-3.1-8b-instruct powered by IBM AgentLab, WorkWiseAI provides businesses with deep workflow insights, data-driven efficiency scoring, and AI-generated optimization strategies.')
-st.write("Solution by: Parin Acharya")
+st.markdown("Solution by: [Parin Acharya](https://www.linkedin.com/in/parinacharya)")
+st.markdown("View [GitHub repository](https://www.github.com/ParinAcharyaGit/workflow-agent)")
 
 # embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
 
@@ -172,23 +173,39 @@ with tab1:
     st.image("./images/workwiseai_cover_image.jpg")
         # Display a welcome message and guide
     # Provide a brief overview of the features
-    st.write("## Getting Started")
+    st.header('Problem statement')
+    st.write('Large modern businesses and fast-growing startups often struggle with operational inefficiencies hidden within their workflows. Traditional process audits can be time-consuming, subjective, and costly. WorkwiseAI automates this process, delivering real-time, AI-driven workflow analysis that enhances decision-making.')
 
-    st.markdown("""
-    To explore the features of WorkWiseAI, follow these steps:
+    with st.expander('Real-World Use Cases of Business Workflow Analysis using IBM Products'):
+        st.markdown("""
+        1. Vodafone, a global communications leader, is using IBM Watson to simulate and analyze digital disucssions with its AI powered virtual agent, reducing testing timelines to under 1 minute. [Read more](https://www.ibm.com/case-studies/vodafone-tobi)
+        2. Artefact, a leading French Bank uses a portfolio of personas represented by AI identities, allowing professionals to reveal crucial insights from customer behavior. [Read more](https://www.ibm.com/case-studies/artefact)
+        """)
 
-    1. **Upload Your Business Process Document (BPD)**: Start by uploading a PDF or text document in the **Home** tab.
-
-    2. **Visualizations**: View workflow visualizations generated from your document.
-
-    3. **Chat Interface**: Interact with WorkWise AI for insights and recommendations.
-
-    4. **S3 Agent Tab**: Explore advanced analysis features powered by the WorkWise S3 Agent.
-
-    5. **Review Past Analyses**: Compare efficiency scores from past analyses, if available, in the agent tab.
-
-    Feel free to explore each tab and make the most of the tools provided!
+    with st.expander('Market scope, revenue streams and scalability'):
+        st.markdown("""
+        1. TOTAL ADDRESSABLE MARKET: The Business Process Automation (BPA) market is projected to reach US$ 19.6 billion by 2026. WorkWiseAI targets sectors such as finance, healthcare, cloud computing and manufacturing.
+        2. REVENUE STREAMS: WorkWiseAI could attract revenue streams from SAAS licensing, enterprise consulting services and OEM partnership deals.
+        3. MARKET COMPETITORS: Platforms like Blue Prism and Microsoft Power Automate offer limited AI-driven insights and contextual analysis of existing and new business workflows WorkWiseAI offers a Unique Selling Proposition through a custom S3 Agent workflow analysis pipeline. SEE AGENT TAB.
+        4. SCALABILITY: Platforms like IBM BPM offer reliable enterprise integration and scalability. WorkWiseAI could benefit from vertical expansion to industry-specific needs and further integration of IBM Watson Discovery and Orchestrate.
     """)
+
+    with st.expander("Getting Started with WorkWise AI"):
+        st.markdown("""
+        To explore the features of WorkWiseAI, follow these steps:
+
+        1. **Upload Your Business Process Document (BPD)**: Start by uploading a PDF or text document in the **Home** tab.
+
+        2. **Visualizations**: View workflow visualizations generated from your document.
+
+        3. **Chat Interface**: Interact with WorkWise AI for insights and recommendations.
+
+        4. **S3 Agent Tab**: Explore advanced analysis features powered by the WorkWise S3 Agent.
+
+        5. **Review Past Analyses**: Compare efficiency scores from past analyses, if available, in the agent tab.
+
+        Feel free to explore each tab and make the most of the tools provided!
+        """)
 
     # Add an image to make the interface more engaging
     # Assuming the image is located in the same directory as your main.py file
@@ -300,7 +317,7 @@ with tab1:
                     'Content-Type': 'application/json',
                 }
 
-                input = st.text_input("Ask WorkWiseAI ...", height = 150)
+                input = st.text_area("Ask WorkWiseAI ...", height = 150)
                 # Add button to control the chat flow
                 send_button = st.button('send')
 
@@ -352,14 +369,13 @@ with tab1:
     # parsed_context = response_data
 
 with tab2:
+    st.image("./images/workflow.png", caption='Architecture Overview')
+    st.write('Upload Business Process Document in the Home tab to get started with S3 Agent Analysis')
     if st.session_state.tab1_completed:
         # Waits for tab 1 session to complete before accessing global variables.
         # prevents on_load errors
 
-        required_data = st.session_state.required_response
-        print(required_data) # for debugging
-
-        st.image("./images/workflow.png", caption='Architecture Overview')
+        required_data = st.session_state.required_response    
         
         with st.spinner('Hang on tight for a response from the WorkWise S3 Agent.'):
             IBM_API_KEY = os.getenv('IBM_API_KEY')

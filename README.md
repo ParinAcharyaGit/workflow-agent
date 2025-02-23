@@ -25,13 +25,13 @@
 - [ Overview](#overview)
 - [ Features](#features)
 - [ Technology Used](#technology-used)
-- [ Project Structure](#project-structure)
-  - [ Project Index](#-project-index)
 - [ Getting Started](#getting-started)
+  - [ Project Structure](#project-structure)
   - [ Prerequisites](#prerequisites)
   - [ Installation](#installation)
   - [ Usage](#usage)
-  - [ Testing](#testing)
+  - [ Testing](#testing) 
+- [ Live URL Deployment ](#live-url-deployment) 
 - [ Roadmap of Project Tasks](#roadmap-of-project-tasks)
 - [ Contributing](#contributing)
 - [ License](#license)
@@ -52,34 +52,35 @@
 
 
 ---
-### Technology Used
+
+## Features
+
+- **Business workflow context grounding** using a knowledge base of company documents, in <code>IBM Vector Indexes</code>.
+
+- **Cutting-edge AI Insights** in generative tasks through the state-of-the-art <code>granite-3-8b-instruct</code> foundation model. [See Model card](https://huggingface.co/ibm-granite/granite-3.1-8b-instruct)
+
+- **Workflow visualization dashboard** in Streamlit with clear, interactive widgets to represent large data.
+  ![Flow diagram](/images/flow_diagram.jpg)
+
+- **WorkwiseAI 'S3' Agent** - a ground-up agent pipeline built on top of the LangChain Framework in IBM AgentLab to analyze business workflow inefficiencies. This enables powerful support for 3 worker agents defined as follows.
+  ![S3 Agent Workflow diagram](/images/workflow.png)
+  - **Summarizer agent**: Breaks down business workflow steps from the context of the knowledge base to reveal critical insights and inefficiency factors.
+  - **Scorer agent**: Evaluates each step in the current workflow using a custom scoring model alongside industry-relevant metrics.
+  - **Suggester agent**: Access to tools like WikipediaQuery, GoDuckGoSearch, and RAGQuery to suggest actionable improvements to each step in the workflow.
+
+  ![S3 Agent Output 1](/images/comparison_1.jpg)
+  
+  ![S3 Agent Output 2](/images/comparison_2.jpg)
+
+- **Chatbot User Interface** grounded in business context documents and offers multi-language support and advanced Natural Language Processing.
+
+  ![Chatbot](/images/chatbot.jpg)
+
 ---
 
-##  Features
+##  Getting Started
 
-- *Business workflow context grounding* using a knowledge base of company documents, in <code>IBM Vector Indexes</code>.
-- *Cutting-edge AI Insights* in generative tasks through the state-of-the-art <code>granite-3-8b-instruct</code> foundation model. [see Model card](https://huggingface.co/ibm-granite/granite-3.1-8b-instruct)
-- *Workflow vizualization dashboard* in Streamlit with clear, interactive widgets to represent large data.
-   ![Flow diagram](/images/flow_diagram.jpg)
-
-- *WorkwiseAI 'S3' Agent* - a ground-up agent pipeline built on top of the LangChain Framework in IBM AgentLab to analyze business workflow inefficiencies. 
-This enables powerful support for 3 worker agents:
-    * **Summarizer agent**
-        - Breaks down business workflow steps from the context of the knowledge base to reveal critical insights and inefficiency factors.
-    * **Scorer agent**
-        *Evaluates each step in the current workflow using a custom scoring model alongside industry-relevant metrics.
-    * **Suggester agent**: Access to tools like WikipediaQuery, GoDuckGoSearch and RAGQuery to suggest actionable improvements to each step in the workflow.
-    ![S3 Agent Output](/images/comparison_1.jpg)
-    ![S3 Agent Output](/imagescomparison_2.jpg)
-
-- *Chatbot User Interface* grounded in business context documents with multi-language support.
-   ![Chatbot](/images/chatbot.jpg)
-
-
-## S3 Agent Workflow Diagram
-![S3 Agent Workflow diagram](/images/workflow.png)
-
-##  Project Structure
+###  Project Structure
 
 ```sh
 └── workflow-agent/
@@ -93,9 +94,6 @@ This enables powerful support for 3 worker agents:
     ├── utils.py
     └── utils.py
 ```
-
----
-##  Getting Started
 
 ###  Prerequisites
 
@@ -131,8 +129,6 @@ Install workflow-agent using one of the following methods:
 ```
 
 
-
-
 ###  Usage
 Run workflow-agent using the following command:
 **Using `pip`** &nbsp; [<img align="center" src="https://img.shields.io/badge/Pip-3776AB.svg?style={badge_style}&logo=pypi&logoColor=white" />](https://pypi.org/project/pip/)
@@ -150,6 +146,11 @@ Run the test suite using the following command:
 ❯ pytest
 ```
 
+---
+
+## Live URL Deployment
+You can access the live deployment here
+[Visit Live Deployment](https://workwiseai.streamlit.app)
 
 ---
 ##  Roadmap of Project Tasks
@@ -226,5 +227,3 @@ For more details, refer to the [LICENSE](https://choosealicense.com/licenses/) f
     1. IBM Documentation
     2. Lablab.ai Discord Channel
 
-### Sources of Inspiration 
-[Nosu](https://nosu.io)
