@@ -1,7 +1,7 @@
 <div align="left" style="position: relative;">
-<h1>WorkwiseAI</h1>
+<h1>WorkWiseAI</h1>
 <p align="left">
-	<em><code>PARIN ACHARYA</code></em>
+	<em><code>PARIN ACHARYA: TEAM LEAD, AI ENGINEER, UX DEVELOPER, TEAM PITCH</code></em>
 </p>
 <p>Generative AI Hackathon with IBM Granite</p>
 <p align="left">
@@ -70,7 +70,7 @@
 
   ![S3 Agent Output 1](/images/comparison_1.jpg)
   
-  ![S3 Agent Output 2](/images/comparison_2.jpg)
+  ![S3 Agent Output 2](/images/comparison_2.png)
 
 - **Chatbot User Interface** grounded in business context documents and offers multi-language support and advanced Natural Language Processing.
 
@@ -134,7 +134,7 @@ Run workflow-agent using the following command:
 **Using `pip`** &nbsp; [<img align="center" src="https://img.shields.io/badge/Pip-3776AB.svg?style={badge_style}&logo=pypi&logoColor=white" />](https://pypi.org/project/pip/)
 
 ```sh
-❯ python {entrypoint}
+❯ streamlit run main.py
 ```
 
 
@@ -226,4 +226,6 @@ For more details, refer to the [LICENSE](https://choosealicense.com/licenses/) f
 ### Resources, guides and support
     1. IBM Documentation
     2. Lablab.ai Discord Channel
+
+Don't forget to leave a star! ⭐
 
