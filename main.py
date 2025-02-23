@@ -537,25 +537,8 @@ with tab2:
         except json.JSONDecodeError as e:
             st.error(f"Failed to parse JSON response: {str(e)}")
             return []
-
-    # Function to display steps in Streamlit
-    def display_steps(parsed_responses):
-        for item in parsed_responses:
-            if 'steps' in item:  # Ensure steps exist
-                for step in item['steps']:
-                    # Create an expander for each step
-                    with st.expander(f"{step.get('step_summary', 'Step')} (Score: {step.get('efficiency_score', 'N/A')})"):
-                        st.markdown(f"**Explanation:** {step.get('explanation', 'No explanation available')}")
-            else:
-                st.warning("No steps found in response.")
-
-    # Parse the responses
-    parsed_responses = parse_responses(agent_response)
-
     # Display the parsed data on Streamlit UI
-    display_steps(parsed_responses)
-
-    # print(response_data)
+     # print(response_data)
     st.header('Comparison against legacy workflow') # Add thinking animation?    
     # THIS IS FOR THE LEGACY WORKFLOW
     analyzed_steps = []  # Initialize workflow_steps to avoid UnboundLocalError
@@ -575,8 +558,8 @@ with tab2:
             step_summary = step['step_summary']
             efficiency_score = step['efficiency_score']
             explanation = step['explanation']
-            with st.expander(f"{step['step_summary']} (Score: {step['efficiency_score']})"):
-                st.markdown(f"**Explanation:** {step['explanation']}")
+            # with st.expander(f"{step['step_summary']} (Score: {step['efficiency_score']})"):
+            #     st.markdown(f"**Explanation:** {step['explanation']}")
 
     except json.JSONDecodeError as e:
         st.error(f"Failed to decode JSON: {str(e)}")
@@ -585,3 +568,60 @@ with tab2:
     except Exception as e:
         st.error(f"An error occurred: {str(e)}")
 
+        # Function to display steps in Streamlit
+    def display_steps(parsed_responses):
+        for item in parsed_responses:
+            if 'steps' in item:
+                for idx, step in enumerate(item['steps']):
+                    # Get corresponding legacy step if exists
+                    legacy_step = analyzed_steps[idx] if idx < len(analyzed_steps) else None
+                    
+                    # Create comparison title
+                    title = f"{step.get('step_summary', 'Step')} "
+                    title += f"(New Score: {step.get('efficiency_score', 'N/A')}"
+                    if legacy_step:
+                        title += f" vs Legacy: {legacy_step.get('efficiency_score', 'N/A')})"
+                    else:
+                        title += ")"
+                    
+                    # Create expander with comparison
+                    with st.expander(f"Step {idx+1}: {step.get('step_summary', 'Step')}"):
+                        # Create two columns for layout
+                        col1, col2 = st.columns(2)
+                        
+                        # Legacy Analysis (Left-aligned)
+                        with col1:
+                            if legacy_step:
+                                st.markdown(
+                                    f"<div style='text-align: left; color: #ffd700;'>"
+                                    f"<strong>🡐 Previous Score: {legacy_step.get('efficiency_score', 'N/A')}</strong><br>"
+                                    f"{legacy_step.get('explanation', 'No legacy explanation available')}"
+                                    f"</div>", 
+                                    unsafe_allow_html=True
+                                )
+                        
+                        # New Analysis (Right-aligned)
+                        with col2:
+                            st.markdown(
+                                f"<div style='text-align: right; color: #00ff00;'>"
+                                f"<strong>New Score: {step.get('efficiency_score', 'N/A')} 🡒</strong><br>"
+                                f"{step.get('explanation', 'No explanation available')}"
+                                f"</div>", 
+                                unsafe_allow_html=True
+                            )
+                        
+                        # Add visual separator
+                        st.markdown("---")
+                        
+                        # Add improvement recommendations if available
+                        if 'improvements' in step:
+                            st.markdown("**Recommendations:**")
+                            for improvement in step['improvements']:
+                                st.markdown(f"- {improvement}")
+            else:
+                st.warning("No steps found in response.")
+
+    # Parse the responses
+    parsed_responses = parse_responses(agent_response)
+
+    display_steps(parsed_responses)
